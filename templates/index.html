@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="ko">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -28,14 +29,14 @@
             color: white;
             margin-bottom: 30px;
             font-size: 2.5em;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
         }
 
         .card {
             background: white;
             border-radius: 15px;
             padding: 30px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
             margin-bottom: 20px;
         }
 
@@ -124,8 +125,13 @@
         }
 
         @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
         }
 
         .error {
@@ -200,6 +206,7 @@
 
         /* 모바일 반응형 - 직접 입력 테이블 */
         @media (max-width: 768px) {
+
             .input-table th,
             .input-table td {
                 padding: 6px 4px;
@@ -220,6 +227,7 @@
         }
 
         @media (max-width: 480px) {
+
             .input-table th,
             .input-table td {
                 padding: 4px 2px;
@@ -330,7 +338,7 @@
             color: white;
             padding: 25px;
             border-radius: 10px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
         }
 
         .metric-label {
@@ -416,7 +424,7 @@
             padding: 0;
             margin: 0 0 0 0;
             border-radius: 15px 15px 0 0;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
         }
 
         .navbar-content {
@@ -497,6 +505,7 @@
         }
     </style>
 </head>
+
 <body>
     <div class="container">
         <!-- 네비게이션 바 -->
@@ -506,7 +515,7 @@
                 <div class="navbar-links">
                     <a href="/" class="navbar-link active">분석하기</a>
                     <a href="/ranking" class="navbar-link">랭킹보기</a>
-                    <a href="/exchange-rate" class="navbar-link">환율</a>
+                    <!-- <a href="/exchange-rate" class="navbar-link">환율</a> -->
                     <a href="/login" class="navbar-link" id="authLink">로그인</a>
                 </div>
             </div>
@@ -546,14 +555,16 @@
                                 <!-- 초기 행 -->
                                 <tr class="input-row">
                                     <td><input type="text" class="ticker-input" placeholder="예: AAPL"></td>
-                                    <td><input type="number" class="quantity-input" placeholder="보유 주식 수 (예: 10)" min="0" step="1"></td>
+                                    <td><input type="number" class="quantity-input" placeholder="보유 주식 수 (예: 10)"
+                                            min="0" step="1"></td>
                                     <td>
                                         <select class="country-input">
                                             <option value="미국">미국</option>
                                             <option value="한국">한국</option>
                                         </select>
                                     </td>
-                                    <td><button type="button" class="delete-row-btn" onclick="deleteRow(this)">삭제</button></td>
+                                    <td><button type="button" class="delete-row-btn"
+                                            onclick="deleteRow(this)">삭제</button></td>
                                 </tr>
                             </tbody>
                         </table>
@@ -562,15 +573,18 @@
                                 <span>➕</span>
                                 <span>종목 추가</span>
                             </button>
-                            <button type="button" class="add-row-btn" onclick="addDcaRow()" style="flex: 1; background: #28a745;">
+                            <button type="button" class="add-row-btn" onclick="addDcaRow()"
+                                style="flex: 1; background: #28a745;">
                                 <span>📈</span>
                                 <span>적립식 투자 추가</span>
                             </button>
                         </div>
-                        
+
                         <!-- 적립식 투자 섹션 -->
-                        <div id="dcaSection" style="margin-top: 20px; padding: 15px; background: #f0f8ff; border-radius: 8px; border: 1px solid #b0d4f1; display: none;">
-                            <h4 style="margin: 0 0 15px 0; color: #0066cc; font-size: 14px; font-weight: 600;">📈 적립식 투자 (Dollar Cost Averaging)</h4>
+                        <div id="dcaSection"
+                            style="margin-top: 20px; padding: 15px; background: #f0f8ff; border-radius: 8px; border: 1px solid #b0d4f1; display: none;">
+                            <h4 style="margin: 0 0 15px 0; color: #0066cc; font-size: 14px; font-weight: 600;">📈 적립식 투자
+                                (Dollar Cost Averaging)</h4>
                             <table class="input-table">
                                 <thead>
                                     <tr>
@@ -586,20 +600,26 @@
                                 </tbody>
                             </table>
                         </div>
-                        
+
                         <!-- 현금 입력 섹션 -->
-                        <div style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px; border: 1px solid #e0e0e0;">
-                            <h4 style="margin: 0 0 15px 0; color: #333; font-size: 14px; font-weight: 600;">💰 현금 보유액</h4>
+                        <div
+                            style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px; border: 1px solid #e0e0e0;">
+                            <h4 style="margin: 0 0 15px 0; color: #333; font-size: 14px; font-weight: 600;">💰 현금 보유액
+                            </h4>
                             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
                                 <div>
-                                    <label style="display: block; margin-bottom: 5px; color: #666; font-size: 13px;">원화 (KRW)</label>
-                                    <input type="number" id="cashKRW" placeholder="원화 금액 (예: 1000000)" min="0" step="1" value="0" 
-                                           style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; box-sizing: border-box;">
+                                    <label style="display: block; margin-bottom: 5px; color: #666; font-size: 13px;">원화
+                                        (KRW)</label>
+                                    <input type="number" id="cashKRW" placeholder="원화 금액 (예: 1000000)" min="0" step="1"
+                                        value="0"
+                                        style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; box-sizing: border-box;">
                                 </div>
                                 <div>
-                                    <label style="display: block; margin-bottom: 5px; color: #666; font-size: 13px;">달러 (USD)</label>
-                                    <input type="number" id="cashUSD" placeholder="달러 금액 (예: 1000.50)" min="0" step="0.01" value="0" 
-                                           style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; box-sizing: border-box;">
+                                    <label style="display: block; margin-bottom: 5px; color: #666; font-size: 13px;">달러
+                                        (USD)</label>
+                                    <input type="number" id="cashUSD" placeholder="달러 금액 (예: 1000.50)" min="0"
+                                        step="0.01" value="0"
+                                        style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; box-sizing: border-box;">
                                 </div>
                             </div>
                         </div>
@@ -633,7 +653,8 @@
                 <!-- 기타 벤치마크 입력 필드 (숨김 상태로 시작) -->
                 <div class="form-group" id="customBenchmarkGroup" style="display: none;">
                     <label for="customBenchmarkTicker">벤치마크 티커</label>
-                    <input type="text" id="customBenchmarkTicker" name="custom_benchmark_ticker" placeholder="예: ARKK, VTI, ^IXIC">
+                    <input type="text" id="customBenchmarkTicker" name="custom_benchmark_ticker"
+                        placeholder="예: ARKK, VTI, ^IXIC">
                     <div class="helper-text">
                         비교할 벤치마크의 티커를 입력하세요. (예: ARKK, VTI, ^IXIC 등)
                     </div>
@@ -659,11 +680,12 @@
             </div>
 
             <div class="error" id="error" style="margin-top: 20px;"></div>
-            
+
             <!-- 캐시 통계 -->
-            <div style="margin-top: 20px; padding: 15px; background: #f5f7fa; border-radius: 8px; font-size: 12px; color: #666;">
+            <div
+                style="margin-top: 20px; padding: 15px; background: #f5f7fa; border-radius: 8px; font-size: 12px; color: #666;">
                 <div>
-                    <strong>💾 데이터 캐시:</strong> 
+                    <strong>💾 데이터 캐시:</strong>
                     <span id="cacheStats">로딩 중...</span>
                 </div>
             </div>
@@ -678,11 +700,12 @@
                 <div style="margin-top: 10px; font-size: 14px; color: #666;">
                     👤 <span id="portfolioOwnerDisplay" style="font-weight: 600;"></span>
                 </div>
-                <div id="privacyNotice" style="margin-top: 15px; padding: 12px; border-left: 4px solid #ffc107; border-radius: 4px; font-size: 14px;">
+                <div id="privacyNotice"
+                    style="margin-top: 15px; padding: 12px; border-left: 4px solid #ffc107; border-radius: 4px; font-size: 14px;">
                     <!-- JavaScript에서 동적으로 내용 설정 -->
                 </div>
             </div>
-            
+
             <div class="card">
                 <h2 style="margin-bottom: 20px; color: #333;">📈 포트폴리오 요약</h2>
                 <div class="summary-grid" id="summaryGrid"></div>
@@ -694,11 +717,15 @@
                     <table id="holdingsTable" style="width: 100%; border-collapse: collapse; margin-top: 10px;">
                         <thead>
                             <tr style="background: #f5f5f5;">
-                                <th class="sortable-header" onclick="sortHoldings('ticker')" style="padding: 12px; text-align: left; border-bottom: 2px solid #667eea;">티커</th>
+                                <th class="sortable-header" onclick="sortHoldings('ticker')"
+                                    style="padding: 12px; text-align: left; border-bottom: 2px solid #667eea;">티커</th>
                                 <th style="padding: 12px; text-align: left; border-bottom: 2px solid #667eea;">종목명</th>
-                                <th style="padding: 12px; text-align: right; border-bottom: 2px solid #667eea;">보유수량</th>
+                                <th style="padding: 12px; text-align: right; border-bottom: 2px solid #667eea;">보유수량
+                                </th>
                                 <th style="padding: 12px; text-align: right; border-bottom: 2px solid #667eea;">평가액</th>
-                                <th class="sortable-header" onclick="sortHoldings('weight')" style="padding: 12px; text-align: right; border-bottom: 2px solid #667eea;">비중(%)</th>
+                                <th class="sortable-header" onclick="sortHoldings('weight')"
+                                    style="padding: 12px; text-align: right; border-bottom: 2px solid #667eea;">비중(%)
+                                </th>
                             </tr>
                         </thead>
                         <tbody id="holdingsTableBody">
@@ -741,27 +768,17 @@
             <div class="card" id="saveSection" style="display: none;">
                 <h2 style="margin-bottom: 20px; color: #333;">💾 포트폴리오 저장</h2>
                 <div style="display: flex; gap: 15px; align-items: center; margin-bottom: 15px;">
-                    <input 
-                        type="text" 
-                        id="portfolioName" 
-                        placeholder="포트폴리오 이름 입력" 
-                        style="flex: 1; padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-size: 14px;"
-                    >
-                    <button 
-                        id="saveBtn" 
-                        onclick="savePortfolio()"
-                        style="padding: 12px 30px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; white-space: nowrap;"
-                    >
+                    <input type="text" id="portfolioName" placeholder="포트폴리오 이름 입력"
+                        style="flex: 1; padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-size: 14px;">
+                    <button id="saveBtn" onclick="savePortfolio()"
+                        style="padding: 12px 30px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; white-space: nowrap;">
                         💾 저장하기
                     </button>
                 </div>
                 <!-- CSV 내보내기 버튼 (직접 입력 모드 전용) -->
                 <div id="exportSection" style="display: none;">
-                    <button 
-                        id="exportBtn" 
-                        onclick="exportToCSV()"
-                        style="width: 100%; padding: 12px 30px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer;"
-                    >
+                    <button id="exportBtn" onclick="exportToCSV()"
+                        style="width: 100%; padding: 12px 30px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer;">
                         📥 CSV로 내보내기
                     </button>
                     <div style="margin-top: 10px; font-size: 12px; color: #666;">
@@ -773,10 +790,7 @@
 
             <!-- AI 분석 버튼 -->
             <div class="card" id="aiAnalysisSection" style="display: none; text-align: center;">
-                <button 
-                    id="aiAnalysisBtn" 
-                    onclick="analyzeWithAI()"
-                    style="
+                <button id="aiAnalysisBtn" onclick="analyzeWithAI()" style="
                         padding: 20px 40px;
                         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
                         color: white;
@@ -792,8 +806,7 @@
                         gap: 12px;
                     "
                     onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 12px 24px rgba(102, 126, 234, 0.4)';"
-                    onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 8px 20px rgba(102, 126, 234, 0.3)';"
-                >
+                    onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 8px 20px rgba(102, 126, 234, 0.3)';">
                     <span style="font-size: 24px;">🤖</span>
                     <span>AI로 분석하기</span>
                 </button>
@@ -811,13 +824,13 @@
                             <span class="ai-icon">🤖</span>
                             <span class="ai-title-text">AI 포트폴리오 분석</span>
                         </h2>
-                        <button onclick="closeAIModal()" class="ai-modal-close" 
-                            onmouseover="this.style.background='rgba(255,255,255,0.2)'" 
+                        <button onclick="closeAIModal()" class="ai-modal-close"
+                            onmouseover="this.style.background='rgba(255,255,255,0.2)'"
                             onmouseout="this.style.background='none'">
                             ×
                         </button>
                     </div>
-                    
+
                     <!-- 로딩 상태 -->
                     <div id="aiLoadingState" class="ai-loading">
                         <div class="ai-loading-icon">🤖</div>
@@ -834,7 +847,7 @@
                             <div class="ai-loading-spinner"></div>
                         </div>
                     </div>
-                    
+
                     <!-- 분석 결과 -->
                     <div id="aiAnalysisContent" class="ai-content"></div>
                 </div>
@@ -844,10 +857,15 @@
 
     <style>
         @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
         }
-        
+
         /* AI 모달 기본 스타일 */
         .ai-modal {
             display: none;
@@ -861,7 +879,7 @@
             overflow-y: auto;
             padding: 20px;
         }
-        
+
         .ai-modal-container {
             max-width: 900px;
             margin: 30px auto;
@@ -870,7 +888,7 @@
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
             position: relative;
         }
-        
+
         .ai-modal-header {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             padding: 20px 25px;
@@ -879,7 +897,7 @@
             justify-content: space-between;
             align-items: center;
         }
-        
+
         .ai-modal-title {
             margin: 0;
             color: white;
@@ -888,15 +906,15 @@
             align-items: center;
             gap: 10px;
         }
-        
+
         .ai-icon {
             font-size: 24px;
         }
-        
+
         .ai-title-text {
             font-size: 20px;
         }
-        
+
         .ai-modal-close {
             background: none;
             border: none;
@@ -912,31 +930,31 @@
             transition: background 0.2s;
             flex-shrink: 0;
         }
-        
+
         .ai-loading {
             padding: 40px 20px;
             text-align: center;
             display: none;
         }
-        
+
         .ai-loading-icon {
             font-size: 48px;
             margin-bottom: 20px;
         }
-        
+
         .ai-loading-title {
             font-size: 18px;
             color: #667eea;
             font-weight: 600;
             margin-bottom: 10px;
         }
-        
+
         .ai-loading-subtitle {
             font-size: 14px;
             color: #999;
             margin-bottom: 20px;
         }
-        
+
         .ai-loading-warning {
             font-size: 13px;
             color: #ef4444;
@@ -947,11 +965,11 @@
             max-width: 400px;
             border: 1px solid #fcc;
         }
-        
+
         .ai-loading-spinner-wrapper {
             margin-top: 30px;
         }
-        
+
         .ai-loading-spinner {
             display: inline-block;
             width: 50px;
@@ -961,14 +979,14 @@
             border-radius: 50%;
             animation: spin 1s linear infinite;
         }
-        
+
         .ai-content {
             padding: 30px;
             max-height: 70vh;
             overflow-y: auto;
             line-height: 1.8;
         }
-        
+
         /* 마크다운 스타일링 */
         #aiAnalysisContent h2 {
             color: #333;
@@ -979,34 +997,34 @@
             border-bottom: 2px solid #e0e0e0;
             word-break: keep-all;
         }
-        
+
         #aiAnalysisContent h2:first-child {
             margin-top: 0;
         }
-        
+
         #aiAnalysisContent ul {
             margin-left: 20px;
             margin-bottom: 20px;
             padding-left: 0;
         }
-        
+
         #aiAnalysisContent li {
             margin-bottom: 10px;
             color: #333;
             word-break: keep-all;
         }
-        
+
         #aiAnalysisContent strong {
             color: #667eea;
             font-weight: 600;
         }
-        
+
         #aiAnalysisContent p {
             margin-bottom: 15px;
             color: #555;
             word-break: keep-all;
         }
-        
+
         #aiAnalysisContent code {
             background: #f5f5f5;
             padding: 2px 6px;
@@ -1016,7 +1034,7 @@
             font-size: 0.9em;
             word-break: break-all;
         }
-        
+
         /* 테이블 스타일링 (AI 분석 결과에 포함될 수 있음) */
         #aiAnalysisContent table {
             width: 100%;
@@ -1024,20 +1042,20 @@
             margin: 15px 0;
             font-size: 14px;
         }
-        
+
         #aiAnalysisContent th,
         #aiAnalysisContent td {
             border: 1px solid #e0e0e0;
             padding: 8px;
             text-align: left;
         }
-        
+
         #aiAnalysisContent th {
             background: #f5f5f5;
             font-weight: 600;
             color: #333;
         }
-        
+
         #aiAnalysisContent blockquote {
             border-left: 4px solid #667eea;
             margin: 15px 0;
@@ -1045,20 +1063,20 @@
             background: #f8f9ff;
             color: #555;
         }
-        
+
         /* 모바일 반응형 스타일 */
         @media (max-width: 768px) {
             .ai-modal {
                 padding: 0;
             }
-            
+
             .ai-modal-container {
                 margin: 0;
                 border-radius: 0;
                 min-height: 100vh;
                 max-width: 100%;
             }
-            
+
             .ai-modal-header {
                 padding: 15px 20px;
                 border-radius: 0;
@@ -1066,144 +1084,144 @@
                 top: 0;
                 z-index: 10;
             }
-            
+
             .ai-modal-title {
                 font-size: 16px;
                 gap: 8px;
             }
-            
+
             .ai-icon {
                 font-size: 20px;
             }
-            
+
             .ai-title-text {
                 font-size: 16px;
             }
-            
+
             .ai-modal-close {
                 font-size: 24px;
                 width: 32px;
                 height: 32px;
             }
-            
+
             .ai-loading {
                 padding: 30px 15px;
             }
-            
+
             .ai-loading-icon {
                 font-size: 36px;
                 margin-bottom: 15px;
             }
-            
+
             .ai-loading-title {
                 font-size: 16px;
                 margin-bottom: 8px;
             }
-            
+
             .ai-loading-subtitle {
                 font-size: 13px;
                 margin-bottom: 15px;
             }
-            
+
             .ai-loading-warning {
                 font-size: 12px;
                 padding: 10px;
                 margin: 0 15px 20px;
                 max-width: 100%;
             }
-            
+
             .ai-loading-spinner {
                 width: 40px;
                 height: 40px;
                 border-width: 4px;
             }
-            
+
             .ai-content {
                 padding: 20px 15px;
                 max-height: calc(100vh - 80px);
             }
-            
+
             #aiAnalysisContent h2 {
                 font-size: 18px;
                 margin-top: 20px;
                 margin-bottom: 12px;
                 padding-bottom: 8px;
             }
-            
+
             #aiAnalysisContent ul {
                 margin-left: 10px;
                 margin-bottom: 15px;
                 padding-left: 10px;
             }
-            
+
             #aiAnalysisContent li {
                 margin-bottom: 8px;
                 font-size: 14px;
                 line-height: 1.6;
             }
-            
+
             #aiAnalysisContent p {
                 margin-bottom: 12px;
                 font-size: 14px;
                 line-height: 1.6;
             }
-            
+
             #aiAnalysisContent code {
                 font-size: 0.85em;
                 padding: 1px 4px;
             }
-            
+
             #aiAnalysisContent table {
                 font-size: 12px;
                 display: block;
                 overflow-x: auto;
                 -webkit-overflow-scrolling: touch;
             }
-            
+
             #aiAnalysisContent th,
             #aiAnalysisContent td {
                 padding: 6px;
                 font-size: 12px;
             }
-            
+
             #aiAnalysisContent blockquote {
                 padding: 8px 15px;
                 margin: 10px 0;
                 font-size: 14px;
             }
         }
-        
+
         /* 작은 모바일 (360px 이하) */
         @media (max-width: 360px) {
             .ai-modal-title {
                 font-size: 14px;
             }
-            
+
             .ai-icon {
                 font-size: 18px;
             }
-            
+
             .ai-title-text {
                 font-size: 14px;
             }
-            
+
             .ai-content {
                 padding: 15px 10px;
             }
-            
+
             #aiAnalysisContent h2 {
                 font-size: 16px;
             }
-            
+
             #aiAnalysisContent li,
             #aiAnalysisContent p {
                 font-size: 13px;
             }
-            
+
             #aiAnalysisContent table {
                 font-size: 11px;
             }
-            
+
             #aiAnalysisContent th,
             #aiAnalysisContent td {
                 padding: 4px;
@@ -1223,9 +1241,9 @@
             try {
                 const response = await fetch('/api/me');
                 const data = await response.json();
-                
+
                 const authLink = document.getElementById('authLink');
-                
+
                 if (data.logged_in) {
                     isUserLoggedIn = true;
                     authLink.textContent = `👤 ${data.user.nickname}`;
@@ -1237,7 +1255,7 @@
                     authLink.href = '/login';
                     authLink.onclick = null;
                 }
-                
+
                 // 로그인 상태에 따라 UI 업데이트
                 updateUIBasedOnLogin();
             } catch (error) {
@@ -1246,20 +1264,20 @@
                 updateUIBasedOnLogin();
             }
         }
-        
+
         // 로그인 상태에 따라 UI 업데이트
         function updateUIBasedOnLogin() {
             const portfolioNameInput = document.getElementById('portfolioName');
             const saveBtn = document.getElementById('saveBtn');
             const aiAnalysisBtn = document.getElementById('aiAnalysisBtn');
-            
+
             if (portfolioNameInput && saveBtn) {
                 if (!isUserLoggedIn) {
                     portfolioNameInput.disabled = true;
                     portfolioNameInput.placeholder = '🔒 로그인이 필요한 기능입니다';
                     portfolioNameInput.style.backgroundColor = '#f5f5f5';
                     portfolioNameInput.style.cursor = 'not-allowed';
-                    
+
                     saveBtn.disabled = true;
                     saveBtn.style.opacity = '0.5';
                     saveBtn.style.cursor = 'not-allowed';
@@ -1269,14 +1287,14 @@
                     portfolioNameInput.placeholder = '포트폴리오 이름 입력';
                     portfolioNameInput.style.backgroundColor = 'white';
                     portfolioNameInput.style.cursor = 'text';
-                    
+
                     saveBtn.disabled = false;
                     saveBtn.style.opacity = '1';
                     saveBtn.style.cursor = 'pointer';
                     saveBtn.title = '';
                 }
             }
-            
+
             if (aiAnalysisBtn) {
                 if (!isUserLoggedIn) {
                     aiAnalysisBtn.disabled = true;
@@ -1293,14 +1311,14 @@
                 }
             }
         }
-        
+
         // 로그아웃
         async function logout() {
             try {
                 const response = await fetch('/api/logout', {
                     method: 'POST'
                 });
-                
+
                 if (response.ok) {
                     alert('로그아웃되었습니다.');
                     window.location.reload();
@@ -1310,10 +1328,10 @@
                 alert('로그아웃 중 오류가 발생했습니다.');
             }
         }
-        
+
         // 페이지 로드 시 로그인 상태 체크
         window.addEventListener('DOMContentLoaded', checkLoginStatus);
-        
+
         const form = document.getElementById('analysisForm');
         const loading = document.getElementById('loading');
         const error = document.getElementById('error');
@@ -1324,7 +1342,7 @@
         const today = new Date();
         const threeYearsAgo = new Date(today.getFullYear() - 3, 0, 1); // 0 = January, 1 = 1일
         const minDate = new Date(2000, 0, 1); // 2000년 1월 1일
-        
+
         // 로컬 날짜를 YYYY-MM-DD 형식으로 변환 (UTC 문제 방지)
         function formatLocalDate(date) {
             const year = date.getFullYear();
@@ -1332,22 +1350,22 @@
             const day = String(date.getDate()).padStart(2, '0');
             return `${year}-${month}-${day}`;
         }
-        
+
         console.log('Today:', formatLocalDate(today));
         console.log('Three years ago (Jan 1):', formatLocalDate(threeYearsAgo));
-        
+
         document.getElementById('startDate').min = formatLocalDate(minDate);
         document.getElementById('startDate').max = formatLocalDate(today);
         document.getElementById('startDate').value = formatLocalDate(threeYearsAgo);
-        
+
         // 기본 벤치마크 설정
         document.getElementById('benchmarkTicker').value = 'SPY';
 
         // 벤치마크 선택 변경 이벤트 리스너
-        document.getElementById('benchmarkTicker').addEventListener('change', function() {
+        document.getElementById('benchmarkTicker').addEventListener('change', function () {
             const customBenchmarkGroup = document.getElementById('customBenchmarkGroup');
             const customBenchmarkTicker = document.getElementById('customBenchmarkTicker');
-            
+
             if (this.value === 'CUSTOM') {
                 customBenchmarkGroup.style.display = 'block';
                 customBenchmarkTicker.required = true;
@@ -1359,20 +1377,20 @@
         });
 
         // 입력 모드 버튼 이벤트 리스너
-        document.getElementById('csvModeBtn').addEventListener('click', function() {
+        document.getElementById('csvModeBtn').addEventListener('click', function () {
             switchInputMode('csv');
         });
-        document.getElementById('manualModeBtn').addEventListener('click', function() {
+        document.getElementById('manualModeBtn').addEventListener('click', function () {
             switchInputMode('manual');
         });
 
         // CSV 파일 선택 시 자동 파싱
-        document.getElementById('csvFile').addEventListener('change', async function(e) {
+        document.getElementById('csvFile').addEventListener('change', async function (e) {
             const file = e.target.files[0];
             if (!file) return;
 
             console.log('📁 CSV file selected:', file.name);
-            
+
             // 로딩 표시
             const csvSection = document.getElementById('csvUploadSection');
             const helperText = csvSection.querySelector('.helper-text');
@@ -1456,7 +1474,7 @@
         // 입력 모드 전환 (CSV 모드는 파일 선택 트리거로만 사용)
         function switchInputMode(mode) {
             console.log('Switching to mode:', mode);
-            
+
             if (mode === 'csv') {
                 // CSV 버튼 클릭 시 파일 선택 다이얼로그 열기
                 document.getElementById('csvFile').click();
@@ -1465,12 +1483,12 @@
             } else {
                 currentInputMode = 'manual';
             }
-            
+
             // 항상 manual 섹션만 표시
             document.getElementById('csvUploadSection').style.display = 'none';
             document.getElementById('manualInputSection').style.display = 'block';
             document.getElementById('csvFile').required = false;
-            
+
             // 버튼 상태 업데이트
             document.getElementById('manualModeBtn').classList.add('active');
             document.getElementById('csvModeBtn').classList.remove('active');
@@ -1499,7 +1517,7 @@
         function deleteRow(button) {
             const tbody = document.getElementById('manualInputTableBody');
             const rows = tbody.getElementsByClassName('input-row');
-            
+
             // 최소 1개 행은 유지
             if (rows.length > 1) {
                 button.closest('tr').remove();
@@ -1512,12 +1530,12 @@
         function addDcaRow() {
             const dcaSection = document.getElementById('dcaSection');
             const tbody = document.getElementById('dcaInputTableBody');
-            
+
             // 섹션이 숨겨져 있으면 표시
             if (dcaSection.style.display === 'none') {
                 dcaSection.style.display = 'block';
             }
-            
+
             const newRow = document.createElement('tr');
             newRow.className = 'dca-row';
             newRow.innerHTML = `
@@ -1545,9 +1563,9 @@
         function deleteDcaRow(button) {
             const tbody = document.getElementById('dcaInputTableBody');
             const dcaSection = document.getElementById('dcaSection');
-            
+
             button.closest('tr').remove();
-            
+
             // 모든 행이 삭제되면 섹션 숨기기
             const rows = tbody.getElementsByClassName('dca-row');
             if (rows.length === 0) {
@@ -1615,32 +1633,32 @@
         loadCacheStats();
 
         // 저장된 포트폴리오 보기 처리
-        window.addEventListener('DOMContentLoaded', function() {
+        window.addEventListener('DOMContentLoaded', function () {
             const urlParams = new URLSearchParams(window.location.search);
             console.log('URL params:', urlParams.toString());
             console.log('view param:', urlParams.get('view'));
-            
+
             if (urlParams.get('view') === 'portfolio') {
                 const portfolioData = sessionStorage.getItem('portfolioData');
                 console.log('SessionStorage data:', portfolioData);
-                
+
                 if (portfolioData) {
                     try {
                         const data = JSON.parse(portfolioData);
                         console.log('Parsed data:', data);
-                        
+
                         // 폼 섹션 숨기기
                         const formCard = document.getElementById('analysisFormCard');
                         if (formCard) {
                             formCard.style.display = 'none';
                         }
-                        
+
                         // 포트폴리오 이름 및 소유자 표시
                         const portfolioNameSection = document.getElementById('portfolioNameSection');
                         const portfolioNameDisplay = document.getElementById('portfolioNameDisplay');
                         const portfolioOwnerDisplay = document.getElementById('portfolioOwnerDisplay');
                         const privacyNotice = document.getElementById('privacyNotice');
-                        
+
                         if (portfolioNameSection && portfolioNameDisplay) {
                             portfolioNameDisplay.textContent = data.name;
                             if (portfolioOwnerDisplay && data.owner_nickname) {
@@ -1648,7 +1666,7 @@
                             } else if (portfolioOwnerDisplay) {
                                 portfolioOwnerDisplay.textContent = '익명';
                             }
-                            
+
                             // 프라이버시 알림 설정
                             if (privacyNotice) {
                                 if (data.is_owner) {
@@ -1663,10 +1681,10 @@
                                     privacyNotice.innerHTML = 'ℹ️ <strong>알림:</strong> 다른 사용자의 포트폴리오를 조회할 때는 프라이버시 보호를 위해 자산 가치가 표시되지 않습니다.';
                                 }
                             }
-                            
+
                             portfolioNameSection.style.display = 'block';
                         }
-                        
+
                         // 결과 표시 - data에서 직접 필요한 필드 추출
                         // is_owner가 true면 정상 표시, false면 프라이버시 모드
                         displayResults({
@@ -1676,19 +1694,19 @@
                             allocation_data: data.allocation_data,
                             chart_data: data.chart_data
                         }, !data.is_owner); // true = 프라이버시 모드 (다른 사용자), false = 정상 표시 (소유자)
-                        
+
                         // 결과 섹션 표시
                         const results = document.getElementById('results');
                         if (results) {
                             results.style.display = 'block';
                         }
-                        
+
                         // sessionStorage 정리
                         sessionStorage.removeItem('portfolioData');
-                        
+
                         // URL에서 view 파라미터 제거 (브라우저 히스토리 유지)
                         window.history.replaceState({}, document.title, window.location.pathname);
-                        
+
                     } catch (err) {
                         console.error('포트폴리오 데이터 로드 오류:', err);
                         console.error('Error stack:', err.stack);
@@ -1703,7 +1721,7 @@
         let chart = null;
         let initialAllocationChart = null;
         let currentAllocationChart = null;
-        
+
         // 분석 결과를 저장하기 위한 전역 변수
         let currentAnalysisData = null;
 
@@ -1730,10 +1748,10 @@
                     // 현금은 항상 맨 아래
                     const aIsCash = a.asset_class === '현금';
                     const bIsCash = b.asset_class === '현금';
-                    
+
                     if (aIsCash && !bIsCash) return 1;
                     if (!aIsCash && bIsCash) return -1;
-                    
+
                     // 둘 다 현금이거나 둘 다 일반 자산인 경우 티커로 비교
                     const comparison = a.ticker.localeCompare(b.ticker);
                     return currentSortDirection === 'asc' ? comparison : -comparison;
@@ -1786,7 +1804,7 @@
                 return;
             }
             console.log('📝 Manual input CSV:', csvContent);
-            
+
             // CSV를 Blob으로 변환하여 파일처럼 처리
             const blob = new Blob([csvContent], { type: 'text/csv' });
             fileToUpload = new File([blob], 'manual_input.csv', { type: 'text/csv' });
@@ -1799,14 +1817,14 @@
             results.style.display = 'none';
             loading.style.display = 'block';
             analyzeBtn.disabled = true;
-            
+
             // AI 분석 캐시 초기화 (새로운 분석 시작)
             aiAnalysisResultCache = null;
 
             const formData = new FormData();
             formData.append('csv_file', fileToUpload);
             formData.append('start_date', document.getElementById('startDate').value);
-            
+
             // 벤치마크 처리
             const benchmarkSelect = document.getElementById('benchmarkTicker').value;
             if (benchmarkSelect === 'CUSTOM') {
@@ -1821,9 +1839,9 @@
             } else {
                 formData.append('benchmark_ticker', benchmarkSelect);
             }
-            
+
             formData.append('base_currency', document.getElementById('baseCurrency').value);
-            
+
             // 적립식 투자 데이터 추가
             const dcaRows = document.querySelectorAll('#dcaInputTableBody .dca-row');
             const dcaData = [];
@@ -1832,7 +1850,7 @@
                 const quantity = row.querySelector('.dca-quantity-input').value.trim();
                 const country = row.querySelector('.dca-country-input').value;
                 const frequency = row.querySelector('.dca-frequency-input').value;
-                
+
                 if (ticker && quantity) {
                     dcaData.push({
                         ticker: ticker,
@@ -1842,12 +1860,12 @@
                     });
                 }
             });
-            
+
             if (dcaData.length > 0) {
                 formData.append('dca_data', JSON.stringify(dcaData));
                 console.log('📈 DCA data:', dcaData);
             }
-            
+
             // FormData 내용 확인 (디버깅용)
             console.log('📤 Sending data:');
             for (let [key, value] of formData.entries()) {
@@ -1871,7 +1889,7 @@
                 }
 
                 console.log('✅ Analysis completed successfully');
-                
+
                 // 경고 메시지 표시 (일부 티커 실패)
                 if (data.warning) {
                     const warningDiv = document.getElementById('error');
@@ -1881,7 +1899,7 @@
                     warningDiv.style.color = '#856404';
                     warningDiv.style.borderLeft = '4px solid #ffc107';
                 }
-                
+
                 // 분석 결과 저장 (저장 버튼용)
                 // DCA가 적용된 최종 포트폴리오 CSV 사용
                 let csvContentForSave;
@@ -1901,20 +1919,20 @@
                     base_currency: document.getElementById('baseCurrency').value,
                     ...data
                 };
-                
+
                 displayResults(data);
                 results.style.display = 'block';
-                
+
                 // 저장 섹션 표시
                 document.getElementById('saveSection').style.display = 'block';
                 document.getElementById('saveMessage').style.display = 'none';
-                
+
                 // AI 분석 버튼 표시
                 document.getElementById('aiAnalysisSection').style.display = 'block';
-                
+
                 // 로그인 상태에 따라 UI 업데이트
                 updateUIBasedOnLogin();
-                
+
                 // 항상 CSV 내보내기 버튼 표시 (수동 입력 모드)
                 document.getElementById('exportSection').style.display = 'block';
 
@@ -1999,13 +2017,13 @@
                     </div>
                 </div>
             `;
-            
+
             // 도넛 차트 생성
             createAllocationCharts(allocation_data, summary.base_currency);
-            
+
             // 보유 종목 테이블 렌더링 (상세 뷰에서는 평가액 숨김)
             renderHoldingsTable(holdings_table, summary.base_currency, isDetailViewMode);
-            
+
             // 정렬 헤더 초기화
             updateSortHeaders();
 
@@ -2019,13 +2037,13 @@
                 } else {
                     diff = benchmarkValue - value;
                 }
-                
+
                 // 차이를 퍼센트로 변환 (벤치마크 대비)
                 const percentDiff = benchmarkValue !== 0 ? (diff / Math.abs(benchmarkValue)) * 100 : diff * 100;
-                
+
                 // -50% ~ +50% 범위를 기준으로 색상 강도 계산
                 const intensity = Math.max(-1, Math.min(1, percentDiff / 50));
-                
+
                 if (Math.abs(intensity) < 0.05) {
                     // 거의 같으면 매우 연한 회색
                     return 'rgb(245, 245, 245)';
@@ -2167,7 +2185,7 @@
                             mode: 'index',
                             intersect: false,
                             callbacks: {
-                                label: function(context) {
+                                label: function (context) {
                                     let label = context.dataset.label || '';
                                     if (label) {
                                         label += ': ';
@@ -2184,7 +2202,7 @@
                         y: {
                             beginAtZero: false,
                             ticks: {
-                                callback: function(value) {
+                                callback: function (value) {
                                     return value.toFixed(2);
                                 }
                             },
@@ -2256,7 +2274,7 @@
                                 font: {
                                     size: 11
                                 },
-                                generateLabels: function(chart) {
+                                generateLabels: function (chart) {
                                     const data = chart.data;
                                     if (data.labels.length && data.datasets.length) {
                                         const total = data.datasets[0].data.reduce((a, b) => a + b, 0);
@@ -2277,7 +2295,7 @@
                         },
                         tooltip: {
                             callbacks: {
-                                label: function(context) {
+                                label: function (context) {
                                     const label = context.label || '';
                                     const value = context.parsed;
                                     const total = context.dataset.data.reduce((a, b) => a + b, 0);
@@ -2318,7 +2336,7 @@
                                 font: {
                                     size: 11
                                 },
-                                generateLabels: function(chart) {
+                                generateLabels: function (chart) {
                                     const data = chart.data;
                                     if (data.labels.length && data.datasets.length) {
                                         const total = data.datasets[0].data.reduce((a, b) => a + b, 0);
@@ -2339,7 +2357,7 @@
                         },
                         tooltip: {
                             callbacks: {
-                                label: function(context) {
+                                label: function (context) {
                                     const label = context.label || '';
                                     const value = context.parsed;
                                     const total = context.dataset.data.reduce((a, b) => a + b, 0);
@@ -2355,7 +2373,7 @@
 
         function renderHoldingsTable(holdings, currency, isDetailView = false) {
             const tbody = document.getElementById('holdingsTableBody');
-            
+
             tbody.innerHTML = holdings.map(h => `
                 <tr style="border-bottom: 1px solid #e0e0e0;">
                     <td style="padding: 12px;"><strong>${h.ticker}</strong></td>
@@ -2383,7 +2401,7 @@
                 } else if (value >= 1000) {
                     return '$' + (value / 1000).toFixed(1) + 'K';
                 }
-                return '$' + value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                return '$' + value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
             }
         }
 
@@ -2395,27 +2413,27 @@
                 window.location.href = '/login';
                 return;
             }
-            
+
             const nameInput = document.getElementById('portfolioName');
             const name = nameInput.value.trim();
             const saveBtn = document.getElementById('saveBtn');
             const saveMessage = document.getElementById('saveMessage');
-            
+
             if (!name) {
                 alert('포트폴리오 이름을 입력해주세요.');
                 nameInput.focus();
                 return;
             }
-            
+
             if (!currentAnalysisData) {
                 alert('분석 결과가 없습니다. 먼저 분석을 실행해주세요.');
                 return;
             }
-            
+
             try {
                 saveBtn.disabled = true;
                 saveBtn.textContent = '저장 중...';
-                
+
                 const response = await fetch('/api/save-portfolio', {
                     method: 'POST',
                     headers: {
@@ -2426,29 +2444,29 @@
                         ...currentAnalysisData
                     })
                 });
-                
+
                 const data = await response.json();
-                
+
                 if (response.status === 401) {
                     alert('🔒 ' + data.error);
                     window.location.href = '/login';
                     return;
                 }
-                
+
                 if (!response.ok) {
                     throw new Error(data.error || '저장 중 오류가 발생했습니다.');
                 }
-                
+
                 // 성공 메시지
                 saveMessage.style.display = 'block';
                 saveMessage.style.background = '#d4edda';
                 saveMessage.style.color = '#155724';
                 saveMessage.style.border = '1px solid #c3e6cb';
                 saveMessage.textContent = `✅ ${data.message}`;
-                
+
                 // 입력 필드 초기화
                 nameInput.value = '';
-                
+
             } catch (err) {
                 console.error('❌ Save Error:', err);
                 saveMessage.style.display = 'block';
@@ -2472,33 +2490,33 @@
             try {
                 // CSV 컨텐츠 가져오기
                 const csvContent = currentAnalysisData.csv_content;
-                
+
                 // Blob 생성
                 const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-                
+
                 // 다운로드 링크 생성
                 const link = document.createElement('a');
                 const url = URL.createObjectURL(blob);
-                
+
                 // 파일명 생성 (현재 날짜 포함)
                 const today = new Date();
                 const dateStr = today.toISOString().split('T')[0];
                 const fileName = `portfolio_${dateStr}.csv`;
-                
+
                 link.setAttribute('href', url);
                 link.setAttribute('download', fileName);
                 link.style.visibility = 'hidden';
-                
+
                 // DOM에 추가하고 클릭
                 document.body.appendChild(link);
                 link.click();
-                
+
                 // 정리
                 document.body.removeChild(link);
                 URL.revokeObjectURL(url);
-                
+
                 console.log('✅ CSV exported successfully:', fileName);
-                
+
                 // 성공 메시지
                 const saveMessage = document.getElementById('saveMessage');
                 saveMessage.style.display = 'block';
@@ -2506,12 +2524,12 @@
                 saveMessage.style.color = '#155724';
                 saveMessage.style.border = '1px solid #c3e6cb';
                 saveMessage.textContent = `✅ CSV 파일이 다운로드되었습니다: ${fileName}`;
-                
+
                 // 3초 후 메시지 숨기기
                 setTimeout(() => {
                     saveMessage.style.display = 'none';
                 }, 3000);
-                
+
             } catch (err) {
                 console.error('❌ Export Error:', err);
                 alert('CSV 내보내기 중 오류가 발생했습니다: ' + err.message);
@@ -2529,19 +2547,19 @@
                 window.location.href = '/login';
                 return;
             }
-            
+
             if (!currentAnalysisData) {
                 alert('분석 데이터가 없습니다. 먼저 포트폴리오 분석을 실행해주세요.');
                 return;
             }
-            
+
             // 모달 열기
             const modal = document.getElementById('aiAnalysisModal');
             const loadingState = document.getElementById('aiLoadingState');
             const contentDiv = document.getElementById('aiAnalysisContent');
-            
+
             openAIModal();
-            
+
             // 캐시된 결과가 있으면 바로 표시
             if (aiAnalysisResultCache) {
                 console.log('✅ Using cached AI analysis result');
@@ -2550,14 +2568,14 @@
                 contentDiv.innerHTML = aiAnalysisResultCache;
                 return;
             }
-            
+
             loadingState.style.display = 'block';
             contentDiv.style.display = 'none';
             contentDiv.innerHTML = '';
-            
+
             try {
                 console.log('🤖 Requesting AI analysis...');
-                
+
                 const response = await fetch('/api/ai-analysis', {
                     method: 'POST',
                     headers: {
@@ -2569,9 +2587,9 @@
                         summary: currentAnalysisData.summary
                     })
                 });
-                
+
                 const data = await response.json();
-                
+
                 // 로그인 체크
                 if (response.status === 401) {
                     closeAIModal();
@@ -2579,39 +2597,39 @@
                     window.location.href = '/login';
                     return;
                 }
-                
+
                 // Rate limiting 처리
                 if (response.status === 429 || data.rate_limited) {
                     throw new Error(data.error || 'AI 분석은 1분에 1번만 가능합니다.');
                 }
-                
+
                 if (!response.ok || !data.success) {
                     throw new Error(data.error || 'AI 분석 요청이 실패했습니다.');
                 }
-                
+
                 console.log('✅ AI analysis received' + (data.cached ? ' (from server cache)' : ''));
-                
+
                 // 마크다운을 HTML로 변환
                 const htmlContent = marked.parse(data.analysis);
-                
+
                 // 결과 캐시에 저장
                 aiAnalysisResultCache = htmlContent;
-                
+
                 // 결과 표시
                 loadingState.style.display = 'none';
                 contentDiv.style.display = 'block';
                 contentDiv.innerHTML = htmlContent;
-                
+
             } catch (err) {
                 console.error('❌ AI Analysis Error:', err);
                 loadingState.style.display = 'none';
                 contentDiv.style.display = 'block';
-                
+
                 // Rate limit 에러인 경우 특별한 메시지 표시
                 const isRateLimitError = err.message.includes('3분에 1번') || err.message.includes('1분에 1번');
                 const errorIcon = isRateLimitError ? '⏱️' : '⚠️';
                 const errorColor = isRateLimitError ? '#f59e0b' : '#ef4444';
-                
+
                 contentDiv.innerHTML = `
                     <div style="text-align: center; padding: 40px; color: ${errorColor};">
                         <div style="font-size: 48px; margin-bottom: 20px;">${errorIcon}</div>
@@ -2625,26 +2643,27 @@
                 `;
             }
         }
-        
+
         function closeAIModal() {
             document.getElementById('aiAnalysisModal').style.display = 'none';
             // 모바일에서 body 스크롤 복원
             document.body.style.overflow = '';
         }
-        
+
         // 모달 열기 헬퍼 함수
         function openAIModal() {
             document.getElementById('aiAnalysisModal').style.display = 'block';
             // 모바일에서 배경 스크롤 방지
             document.body.style.overflow = 'hidden';
         }
-        
+
         // 모달 외부 클릭시 닫기
-        document.getElementById('aiAnalysisModal').addEventListener('click', function(e) {
+        document.getElementById('aiAnalysisModal').addEventListener('click', function (e) {
             if (e.target === this) {
                 closeAIModal();
             }
         });
     </script>
 </body>
+
 </html>

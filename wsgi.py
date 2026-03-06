@@ -1,23 +1,17 @@
 """
-WSGI config for PythonAnywhere deployment
+WSGI entry point for production deployment with Gunicorn
 """
-import sys
+
 import os
-
-# PythonAnywhere 경로 설정 (배포 시 수정 필요)
-# 예: /home/yourusername/stock_analyzer
-project_home = '/home/yourusername/stock_analyzer'
-
-if project_home not in sys.path:
-    sys.path.insert(0, project_home)
-
-# 환경변수 로드
 from dotenv import load_dotenv
-load_dotenv(os.path.join(project_home, '.env'))
 
-# Flask 앱 임포트
+# Load environment variables from .env file if it exists
+load_dotenv()
+
+# Import Flask app
 from app import app as application
 
-# WSGI application
 if __name__ == "__main__":
-    application.run()
+    # For local testing
+    port = int(os.environ.get("PORT", 8000))
+    application.run(host="0.0.0.0", port=port)

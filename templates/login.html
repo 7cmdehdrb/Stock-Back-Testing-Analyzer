@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="ko">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -29,7 +30,7 @@
             padding: 0;
             margin: 0 0 0 0;
             border-radius: 15px 15px 0 0;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
         }
 
         .navbar-content {
@@ -83,7 +84,7 @@
             background: white;
             border-radius: 0 0 15px 15px;
             padding: 40px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
             margin-top: 0;
         }
 
@@ -291,7 +292,7 @@
 
         .social-btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
         }
 
         .social-btn.google {
@@ -318,6 +319,7 @@
         }
     </style>
 </head>
+
 <body>
     <div class="container">
         <!-- 네비게이션 바 -->
@@ -327,7 +329,7 @@
                 <div class="navbar-links">
                     <a href="/" class="navbar-link">분석하기</a>
                     <a href="/ranking" class="navbar-link">랭킹보기</a>
-                    <a href="/exchange-rate" class="navbar-link">환율</a>
+                    <!-- <a href="/exchange-rate" class="navbar-link">환율</a> -->
                     <a href="/login" class="navbar-link active">로그인</a>
                 </div>
             </div>
@@ -336,7 +338,7 @@
         <div class="card">
             <div class="login-container">
                 <h1>🔐 로그인</h1>
-                
+
                 <form id="loginForm">
                     <div class="form-group">
                         <label for="email">이메일</label>
@@ -347,7 +349,7 @@
                         <label for="password">비밀번호</label>
                         <input type="password" id="password" name="password" placeholder="비밀번호를 입력하세요" required>
                     </div>
-                    
+
                     <div class="checkbox-group">
                         <input type="checkbox" id="saveEmail" name="saveEmail">
                         <label for="saveEmail">이메일 저장하기</label>
@@ -368,7 +370,7 @@
 
                 <div class="social-login">
                     <div class="social-login-title">소셜 계정으로 로그인</div>
-                    
+
                     <button class="social-btn google" onclick="loginWithGoogle()">
                         <span class="social-icon">🔍</span>
                         <span>Google로 로그인</span>
@@ -392,7 +394,7 @@
         }
 
         // 페이지 로드 시 저장된 이메일 불러오기
-        window.addEventListener('DOMContentLoaded', function() {
+        window.addEventListener('DOMContentLoaded', function () {
             const savedEmail = localStorage.getItem('savedEmail');
             const saveEmailCheckbox = document.getElementById('saveEmail');
             const emailInput = document.getElementById('email');
@@ -404,13 +406,13 @@
         });
 
         // 로그인 폼 제출 처리
-        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+        document.getElementById('loginForm').addEventListener('submit', async function (e) {
             e.preventDefault();
-            
+
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
             const saveEmail = document.getElementById('saveEmail').checked;
-            
+
             const submitBtn = document.querySelector('button[type="submit"]');
             submitBtn.disabled = true;
             submitBtn.textContent = '로그인 중...';
@@ -467,4 +469,5 @@
         }
     </script>
 </body>
+
 </html>

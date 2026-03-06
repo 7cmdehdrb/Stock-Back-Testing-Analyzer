@@ -2329,10 +2329,10 @@ def ranking():
     return render_template("ranking.html", active_page="ranking")
 
 
-@app.route("/exchange-rate")
-def exchange_rate():
-    """환율 페이지"""
-    return render_template("exchange_rate.html", active_page="exchange-rate")
+# @app.route("/exchange-rate")
+# def exchange_rate():
+#     """환율 페이지"""
+#     return render_template("exchange_rate.html", active_page="exchange-rate")
 
 
 @app.route("/login")
@@ -3698,4 +3698,5 @@ if __name__ == "__main__":
     init_database()
 
     # Flask 앱 실행 (외부 접속 허용)
-    app.run(host="0.0.0.0", debug=True, port=8000)
+    port = int(os.environ.get("PORT", 8000))
+    app.run(host="0.0.0.0", debug=True, port=port)
