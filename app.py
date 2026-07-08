@@ -276,11 +276,11 @@ admin = Admin(
     name="Portfolio Admin",
     index_view=DashboardView(name="Dashboard", url="/admin"),
 )
-admin.add_view(StockAdmin(Stock, db, name="Stocks"))
-admin.add_view(StockPriceAdmin(StockPrice, db, name="Stock Prices"))
+admin.add_view(StockAdmin(Stock, db.session, name="Stocks"))
+admin.add_view(StockPriceAdmin(StockPrice, db.session, name="Stock Prices"))
 
 admin.add_view(
-    ExchangeRateCacheAdmin(ExchangeRateCache, db, name="Exchange Rates")
+    ExchangeRateCacheAdmin(ExchangeRateCache, db.session, name="Exchange Rates")
 )
 
 
