@@ -1,0 +1,23 @@
+// 적립식 투자 데이터 추가
+            const dcaEnabled = document.getElementById('dcaCheckbox').checked;
+            const dcaData = [];
+            if (dcaEnabled) {
+                const dcaRows = document.querySelectorAll('#dcaInputTableBody .dca-row');
+                dcaRows.forEach(row => {
+                const ticker = row.querySelector('.dca-ticker-input').value.trim();
+                const quantity = row.querySelector('.dca-quantity-input').value.trim();
+                const country = row.querySelector('.dca-country-input').value;
+                const frequency = row.querySelector('.dca-frequency-input').value;
+
+                if (ticker && quantity) {
+                    dcaData.push({
+                        ticker: ticker,
+                        quantity: parseFloat(quantity),
+                        country: country,
+                        frequency: frequency
+                    });
+                }
+                });
+            }
+
+            if (dcaData.length > 0) {

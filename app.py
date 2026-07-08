@@ -19,7 +19,6 @@ from flask import Flask, jsonify, render_template, request, url_for, session, re
 from flask_admin import Admin, AdminIndexView, expose
 from flask_admin.contrib.sqla import ModelView
 from flask_sqlalchemy import SQLAlchemy
-import openai
 
 # .env 파일 로드
 load_dotenv()
@@ -36,13 +35,10 @@ app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(days=7)  # 세션 유효기간 7일
 
 # OpenAI API 키 설정
-openai.api_key = os.getenv("OPENAI_API_KEY")
 DEBUG = os.getenv("DEBUG", "False").lower() == "true"
 
 # AI 분석 rate limiting과 캐싱을 위한 딕셔너리
 # AI 분석 rate limiting과 캐싱을 위한 딕셔너리 (user_id 기반)
-ai_analysis_cache = {}  # {user_id: {"timestamp": datetime, "result": dict}}
-ai_analysis_rate_limit = {}  # {user_id: last_request_time}
 
 # DB 파일 경로
 DB_PATH = os.path.join(os.path.dirname(__file__), "stock_cache.db")
@@ -80,61 +76,10 @@ class StockPriceCache(db.Model):
         return f"<StockPrice {self.ticker} {self.date}>"
 
 
-class SavedPortfolio(db.Model):
-    __tablename__ = "saved_portfolios"
-
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    user_id = db.Column(
-        db.Integer, db.ForeignKey("users.id"), nullable=True
-    )  # 기존 데이터 호환
-    name = db.Column(db.String(200), nullable=False)
-    csv_content = db.Column(db.Text, nullable=False)
-    start_date = db.Column(db.String(10))
-    benchmark_ticker = db.Column(db.String(20))
-    base_currency = db.Column(db.String(3))
-    created_at = db.Column(db.DateTime, default=datetime.now)
-    last_accessed = db.Column(db.DateTime, default=datetime.now)
-
-    # 관계 설정
-    user = db.relationship("User", backref="portfolios")
-
-    def __repr__(self):
-        return f"<Portfolio {self.name}>"
 
 
-class User(db.Model):
-    __tablename__ = "users"
-
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    email = db.Column(db.String(255), unique=True, nullable=False)
-    password_hash = db.Column(
-        db.String(255), nullable=True
-    )  # 소셜 로그인은 비밀번호 없음
-    nickname = db.Column(db.String(100), unique=True, nullable=False)
-    account_type = db.Column(
-        db.String(20), nullable=False, default="local"
-    )  # 'local', 'google', 'kakao'
-    is_admin = db.Column(db.Boolean, default=False, nullable=False)  # 관리자 권한
-    created_at = db.Column(db.DateTime, default=datetime.now)
-    last_login = db.Column(db.DateTime)
-    is_active = db.Column(db.Boolean, default=True)
-
-    def __repr__(self):
-        return f"<User {self.email} ({self.account_type})>"
 
 
-class EmailVerification(db.Model):
-    __tablename__ = "email_verifications"
-
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    email = db.Column(db.String(255), nullable=False)
-    code = db.Column(db.String(6), nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.now)
-    expires_at = db.Column(db.DateTime, nullable=False)
-    is_verified = db.Column(db.Boolean, default=False)
-
-    def __repr__(self):
-        return f"<EmailVerification {self.email}>"
 
 
 class ExchangeRateCache(db.Model):
@@ -173,105 +118,10 @@ class StockPriceCacheAdmin(ModelView):
     export_types = ["csv", "xlsx"]
 
 
-class SavedPortfolioAdmin(ModelView):
-    def is_accessible(self):
-        """접근 권한 확인"""
-        return session.get("admin_authenticated", False)
-
-    def inaccessible_callback(self, name, **kwargs):
-        """접근 불가능할 때 로그인 페이지로 리다이렉트"""
-        return redirect(url_for("admin_login", next=request.url))
-
-    column_list = [
-        "id",
-        "user_id",
-        "name",
-        "start_date",
-        "benchmark_ticker",
-        "base_currency",
-        "created_at",
-        "last_accessed",
-    ]
-    column_searchable_list = ["name", "benchmark_ticker"]
-    column_sortable_list = ["id", "name", "created_at", "last_accessed"]
-    column_default_sort = [("last_accessed", True)]
-    page_size = 50
-    can_export = True
-    export_types = ["csv", "xlsx"]
-    # CSV 내용은 리스트에서 제외 (너무 길어서)
-    column_exclude_list = ["csv_content"]
-    # 상세보기/수정에서는 표시
-    form_excluded_columns = []
 
 
-class UserAdmin(ModelView):
-    def is_accessible(self):
-        """접근 권한 확인"""
-        return session.get("admin_authenticated", False)
-
-    def inaccessible_callback(self, name, **kwargs):
-        """접근 불가능할 때 로그인 페이지로 리다이렉트"""
-        return redirect(url_for("admin_login", next=request.url))
-
-    column_list = [
-        "id",
-        "email",
-        "nickname",
-        "account_type",
-        "is_admin",
-        "password_hash",
-        "created_at",
-        "last_login",
-        "is_active",
-    ]
-    column_searchable_list = ["email", "nickname"]
-    column_sortable_list = ["id", "email", "nickname", "created_at", "last_login"]
-    column_default_sort = [("created_at", True)]
-    column_filters = ["account_type", "is_active", "is_admin"]
-    page_size = 50
-    can_export = True
-    export_types = ["csv", "xlsx"]
-    # 모든 컬럼 표시 (숨김 없음)
-    form_excluded_columns = []
-    # 읽기 전용으로 표시 (포매터 제거)
-    column_formatters = {}
-    # 설명
-    column_descriptions = {
-        "account_type": "local: 로컬 가입, google: 구글, kakao: 카카오",
-        "password_hash": "암호화된 비밀번호 (HMAC-SHA256)",
-        "is_admin": "관리자 권한 여부",
-    }
-    # 상세보기에서 전체 표시
-    column_details_list = [
-        "id",
-        "email",
-        "nickname",
-        "account_type",
-        "is_admin",
-        "password_hash",
-        "created_at",
-        "last_login",
-        "is_active",
-    ]
 
 
-class EmailVerificationAdmin(ModelView):
-    def is_accessible(self):
-        """접근 권한 확인"""
-        return session.get("admin_authenticated", False)
-
-    def inaccessible_callback(self, name, **kwargs):
-        """접근 불가능할 때 로그인 페이지로 리다이렉트"""
-        return redirect(url_for("admin_login", next=request.url))
-
-    column_list = ["id", "email", "code", "created_at", "expires_at", "is_verified"]
-    column_searchable_list = ["email", "code"]
-    column_sortable_list = ["id", "email", "created_at", "expires_at"]
-    column_default_sort = [("created_at", True)]
-    column_filters = ["is_verified"]
-    page_size = 50
-    can_export = True
-    export_types = ["csv", "xlsx"]
 
 
 class ExchangeRateCacheAdmin(ModelView):
@@ -477,17 +327,12 @@ class DashboardView(AdminIndexView):
 admin = Admin(
     app,
     name="Portfolio Admin",
-    template_mode="bootstrap3",
     index_view=DashboardView(name="Dashboard", url="/admin"),
 )
-admin.add_view(StockPriceCacheAdmin(StockPriceCache, db.session, name="Stock Prices"))
-admin.add_view(SavedPortfolioAdmin(SavedPortfolio, db.session, name="Portfolios"))
-admin.add_view(UserAdmin(User, db.session, name="Users"))
+admin.add_view(StockPriceCacheAdmin(StockPriceCache, db, name="Stock Prices"))
+
 admin.add_view(
-    EmailVerificationAdmin(EmailVerification, db.session, name="Email Verifications")
-)
-admin.add_view(
-    ExchangeRateCacheAdmin(ExchangeRateCache, db.session, name="Exchange Rates")
+    ExchangeRateCacheAdmin(ExchangeRateCache, db, name="Exchange Rates")
 )
 
 
@@ -1668,9 +1513,9 @@ def calculate_metrics(portfolio_returns: pd.Series, benchmark_returns: pd.Series
     # app.logger.info(f"Annualized volatility: {std_dev * 100:.2f}%")
     # app.logger.info(f"Sharpe ratio: {sharpe_ratio:.4f}")
 
-    # 소티노 비율 (하방 표준편차)
-    downside_returns = portfolio_returns[portfolio_returns < 0]
-    downside_std = downside_returns.std() * np.sqrt(trading_days)
+    # 소티노 비율 (하방 편차: 타겟 수익률 0% 기준)
+    downside_variance = (portfolio_returns[portfolio_returns < 0] ** 2).sum() / len(portfolio_returns)
+    downside_std = np.sqrt(downside_variance) * np.sqrt(trading_days)
     sortino_ratio = avg_return / downside_std if downside_std != 0 else 0
 
     # app.logger.info(f"\n  📉 Sortino Calculation:")
@@ -1721,8 +1566,8 @@ def calculate_metrics(portfolio_returns: pd.Series, benchmark_returns: pd.Series
     )  # 연간화된 평균 수익률
     benchmark_sharpe = benchmark_avg_return / benchmark_std if benchmark_std != 0 else 0
 
-    benchmark_downside_returns = benchmark_returns[benchmark_returns < 0]
-    benchmark_downside_std = benchmark_downside_returns.std() * np.sqrt(trading_days)
+    benchmark_downside_variance = (benchmark_returns[benchmark_returns < 0] ** 2).sum() / len(benchmark_returns)
+    benchmark_downside_std = np.sqrt(benchmark_downside_variance) * np.sqrt(trading_days)
     benchmark_sortino = (
         benchmark_avg_return / benchmark_downside_std
         if benchmark_downside_std != 0
@@ -1733,6 +1578,17 @@ def calculate_metrics(portfolio_returns: pd.Series, benchmark_returns: pd.Series
     # print(f"    Sharpe: {benchmark_sharpe:.4f}")
     # print(f"    Sortino: {benchmark_sortino:.4f}")
     # print(f"    CAGR: {benchmark_cagr * 100:.2f}%")
+
+    # MDD (최대 낙폭) 계산
+    cumulative_returns_series = (1 + portfolio_returns).cumprod()
+    rolling_max = cumulative_returns_series.cummax()
+    drawdowns = (cumulative_returns_series - rolling_max) / rolling_max
+    mdd = drawdowns.min() if len(drawdowns) > 0 else 0
+
+    benchmark_cumulative_returns_series = (1 + benchmark_returns).cumprod()
+    benchmark_rolling_max = benchmark_cumulative_returns_series.cummax()
+    benchmark_drawdowns = (benchmark_cumulative_returns_series - benchmark_rolling_max) / benchmark_rolling_max
+    benchmark_mdd = benchmark_drawdowns.min() if len(benchmark_drawdowns) > 0 else 0
 
     # 연 평균 수익률 (영업일 가중평균) 계산
     weighted_annual_return = calculate_weighted_annual_return(portfolio_returns)
@@ -1753,6 +1609,8 @@ def calculate_metrics(portfolio_returns: pd.Series, benchmark_returns: pd.Series
         "cumulative_return": round(cumulative_return * 100, 2),
         "volatility": round(std_dev * 100, 2),
         "benchmark_volatility": round(benchmark_std * 100, 2),
+        "mdd": round(mdd * 100, 2),
+        "benchmark_mdd": round(benchmark_mdd * 100, 2),
     }
 
     return metrics
@@ -1836,8 +1694,8 @@ def prepare_allocation_data(
         else:
             current_allocation[name] = cash_data["value"]
 
-    # 상위 10개 종목만 표시, 나머지는 "기타"로 묶기
-    def get_top_allocations(allocation_dict, top_n=10):
+    # 상위 5개 종목만 표시, 나머지는 "기타"로 묶기
+    def get_top_allocations(allocation_dict, top_n=5):
         sorted_items = sorted(allocation_dict.items(), key=lambda x: x[1], reverse=True)
 
         if len(sorted_items) <= top_n:
@@ -1850,8 +1708,8 @@ def prepare_allocation_data(
 
         return top_items
 
-    initial_top = get_top_allocations(initial_allocation)
-    current_top = get_top_allocations(current_allocation)
+    initial_top = get_top_allocations(initial_allocation, 5)
+    current_top = get_top_allocations(current_allocation, 5)
 
     return {
         "initial": {
@@ -1932,20 +1790,15 @@ def get_cache_stats():
         conn = sqlite3.connect(DB_PATH, timeout=30.0)
         cursor = conn.cursor()
 
-        # 캐시된 티커 수와 레코드 수 조회
-        cursor.execute(
-            """
-            SELECT COUNT(DISTINCT ticker) as ticker_count,
-                   COUNT(*) as record_count
-            FROM stock_price_cache
-        """
-        )
+        cursor.execute("SELECT COUNT(*) FROM stock_price_cache")
+        stock_result = cursor.fetchone()
+        stock_prices = stock_result[0] if stock_result else 0
 
-        result = cursor.fetchone()
-        ticker_count = result[0] if result else 0
-        record_count = result[1] if result else 0
+        cursor.execute("SELECT COUNT(*) FROM exchange_rate_cache")
+        exchange_result = cursor.fetchone()
+        exchange_rates = exchange_result[0] if exchange_result else 0
 
-        return jsonify({"ticker_count": ticker_count, "record_count": record_count})
+        return jsonify({"stock_prices": stock_prices, "exchange_rates": exchange_rates})
     except Exception as e:
         print(f"Error getting cache stats: {e}")
         return jsonify({"error": str(e)}), 500
@@ -1954,83 +1807,6 @@ def get_cache_stats():
             conn.close()
 
 
-@app.route("/api/save-portfolio", methods=["POST"])
-def save_portfolio():
-    """포트폴리오 분석 결과 저장"""
-    try:
-        # 로그인 체크 - 필수
-        if "user_id" not in session:
-            return jsonify({"error": "로그인이 필요한 기능입니다."}), 401
-
-        user_id = session["user_id"]
-
-        data = request.json
-
-        # 필수 데이터 확인
-        required_fields = [
-            "name",
-            "csv_content",
-            "start_date",
-            "benchmark_ticker",
-            "base_currency",
-            "metrics",
-            "summary",
-            "holdings_table",
-            "allocation_data",
-            "chart_data",
-        ]
-
-        missing_fields = [field for field in required_fields if field not in data]
-        if missing_fields:
-            return (
-                jsonify({"error": f"필수 데이터 누락: {', '.join(missing_fields)}"}),
-                400,
-            )
-
-        # JSON으로 변환하여 저장
-        import json
-
-        portfolio = SavedPortfolio(
-            user_id=user_id,
-            name=data["name"],
-            csv_content=data["csv_content"],
-            start_date=data["start_date"],
-            benchmark_ticker=data["benchmark_ticker"],
-            base_currency=data["base_currency"],
-            created_at=datetime.now(),
-            last_accessed=datetime.now(),
-        )
-
-        # 분석 결과를 csv_content에 JSON으로 추가 저장
-        full_data = {
-            "csv_content": data["csv_content"],
-            "metrics": data["metrics"],
-            "summary": data["summary"],
-            "holdings_table": data["holdings_table"],
-            "allocation_data": data["allocation_data"],
-            "chart_data": data["chart_data"],
-        }
-        portfolio.csv_content = json.dumps(full_data, ensure_ascii=False)
-
-        db.session.add(portfolio)
-        db.session.commit()
-
-        return jsonify(
-            {
-                "success": True,
-                "portfolio_id": portfolio.id,
-                "message": f"포트폴리오 '{data['name']}'가 저장되었습니다.",
-            }
-        )
-
-    except Exception as e:
-        db.session.rollback()
-        error_trace = traceback.format_exc()
-        print("=" * 80)
-        print("❌ ERROR in /api/save-portfolio endpoint:")
-        print(error_trace)
-        print("=" * 80)
-        return jsonify({"error": f"저장 중 오류가 발생했습니다: {str(e)}"}), 500
 
 
 @app.route("/api/exchange-rate", methods=["GET"])
@@ -2323,10 +2099,6 @@ def get_exchange_rate_indicators():
         return jsonify({"error": f"지표 계산 중 오류: {str(e)}"}), 500
 
 
-@app.route("/ranking")
-def ranking():
-    """랭킹 페이지"""
-    return render_template("ranking.html", active_page="ranking")
 
 
 # @app.route("/exchange-rate")
@@ -2335,33 +2107,10 @@ def ranking():
 #     return render_template("exchange_rate.html", active_page="exchange-rate")
 
 
-@app.route("/login")
-def login():
-    """로그인 페이지"""
-    # 이미 로그인된 경우 메인 페이지로 리다이렉트
-    if "user_id" in session:
-        return redirect("/")
-    return render_template("login.html", active_page="login")
 
 
-@app.route("/signup")
-def signup():
-    """회원가입 페이지"""
-    return render_template("signup.html", active_page="signup")
 
 
-@app.route("/mypage")
-def mypage():
-    """마이페이지"""
-    # 로그인 확인
-    if "user_id" not in session:
-        return redirect("/login")
-
-    # 사용자 정보 조회
-    user = User.query.filter_by(id=session["user_id"]).first()
-    is_admin = user.is_admin if user else False
-
-    return render_template("mypage.html", active_page="mypage", is_admin=is_admin)
 
 
 @app.route("/admin-login", methods=["GET", "POST"])
@@ -2396,737 +2145,30 @@ def admin_logout():
     return redirect("/")
 
 
-@app.route("/api/update-nickname", methods=["POST"])
-def update_nickname():
-    """닉네임 변경"""
-    try:
-        # 로그인 확인
-        if "user_id" not in session:
-            return jsonify({"error": "로그인이 필요합니다."}), 401
 
-        data = request.json
-        new_nickname = data.get("nickname")
 
-        if not new_nickname:
-            return jsonify({"error": "닉네임을 입력해주세요."}), 400
 
-        # 닉네임 길이 체크
-        if len(new_nickname) < 2 or len(new_nickname) > 20:
-            return jsonify({"error": "닉네임은 2~20자 사이여야 합니다."}), 400
 
-        # 현재 사용자
-        user = User.query.get(session["user_id"])
-        if not user:
-            return jsonify({"error": "사용자를 찾을 수 없습니다."}), 404
 
-        # 현재 닉네임과 같은지 확인
-        if user.nickname == new_nickname:
-            return jsonify({"error": "현재 닉네임과 동일합니다."}), 400
 
-        # 닉네임 중복 체크
-        existing_user = User.query.filter_by(nickname=new_nickname).first()
-        if existing_user:
-            return jsonify({"error": "이미 사용 중인 닉네임입니다."}), 400
 
-        # 닉네임 변경
-        old_nickname = user.nickname
-        user.nickname = new_nickname
-        db.session.commit()
 
-        # 세션 업데이트
-        session["nickname"] = new_nickname
 
-        app.logger.info(f"✅ 닉네임 변경: {old_nickname} -> {new_nickname}")
 
-        return (
-            jsonify(
-                {
-                    "success": True,
-                    "message": "닉네임이 변경되었습니다.",
-                    "nickname": new_nickname,
-                }
-            ),
-            200,
-        )
 
-    except Exception as e:
-        db.session.rollback()
-        app.logger.error(f"닉네임 변경 오류: {e}")
-        traceback.print_exc()
-        return jsonify({"error": "닉네임 변경 중 오류가 발생했습니다."}), 500
 
 
-@app.route("/api/my-portfolios", methods=["GET"])
-def get_my_portfolios():
-    """내 포트폴리오 목록 조회"""
-    try:
-        # 로그인 확인
-        if "user_id" not in session:
-            return jsonify({"error": "로그인이 필요합니다."}), 401
 
-        import json
 
-        # 사용자의 포트폴리오 조회
-        portfolios = (
-            SavedPortfolio.query.filter_by(user_id=session["user_id"])
-            .order_by(SavedPortfolio.last_accessed.desc())
-            .all()
-        )
 
-        result = []
-        for p in portfolios:
-            try:
-                data = json.loads(p.csv_content)
-                metrics = data.get("metrics", {})
-                summary = data.get("summary", {})
 
-                result.append(
-                    {
-                        "id": p.id,
-                        "name": p.name,
-                        "benchmark": p.benchmark_ticker,
-                        "base_currency": p.base_currency,
-                        "created_at": p.created_at.strftime("%Y-%m-%d %H:%M"),
-                        "last_accessed": p.last_accessed.strftime("%Y-%m-%d %H:%M"),
-                        "metrics": metrics,
-                        "summary": summary,
-                    }
-                )
-            except Exception as e:
-                app.logger.error(f"포트폴리오 {p.id} 파싱 오류: {e}")
-                continue
 
-        return (
-            jsonify({"success": True, "portfolios": result, "count": len(result)}),
-            200,
-        )
 
-    except Exception as e:
-        app.logger.error(f"포트폴리오 조회 오류: {e}")
-        traceback.print_exc()
-        return jsonify({"error": "포트폴리오 조회 중 오류가 발생했습니다."}), 500
 
 
-@app.route("/api/delete-portfolio/<int:portfolio_id>", methods=["DELETE"])
-def delete_portfolio(portfolio_id):
-    """포트폴리오 삭제"""
-    try:
-        # 로그인 확인
-        if "user_id" not in session:
-            return jsonify({"error": "로그인이 필요합니다."}), 401
 
-        user_id = session["user_id"]
 
-        # 포트폴리오 조회
-        portfolio = SavedPortfolio.query.get(portfolio_id)
 
-        if not portfolio:
-            return jsonify({"error": "포트폴리오를 찾을 수 없습니다."}), 404
-
-        # 소유권 확인 - 필수!
-        if portfolio.user_id != user_id:
-            app.logger.warning(
-                f"⚠️ 권한 없는 삭제 시도: User {user_id} -> Portfolio {portfolio_id} (Owner: {portfolio.user_id})"
-            )
-            return jsonify({"error": "본인의 포트폴리오만 삭제할 수 있습니다."}), 403
-
-        # 포트폴리오 삭제
-        portfolio_name = portfolio.name
-        db.session.delete(portfolio)
-        db.session.commit()
-
-        app.logger.info(
-            f"✅ 포트폴리오 삭제 완료: {portfolio_name} (ID: {portfolio_id}) by User {user_id}"
-        )
-
-        return (
-            jsonify(
-                {
-                    "success": True,
-                    "message": f"'{portfolio_name}' 포트폴리오가 삭제되었습니다.",
-                }
-            ),
-            200,
-        )
-
-    except Exception as e:
-        db.session.rollback()
-        app.logger.error(f"포트폴리오 삭제 오류: {e}")
-        traceback.print_exc()
-        return jsonify({"error": "포트폴리오 삭제 중 오류가 발생했습니다."}), 500
-
-
-@app.route("/api/login", methods=["POST"])
-def api_login():
-    """로그인 처리"""
-    try:
-        data = request.json
-        email = data.get("email")
-        password = data.get("password")
-
-        # 필수 필드 검증
-        if not email or not password:
-            return jsonify({"error": "이메일과 비밀번호를 입력해주세요."}), 400
-
-        # 사용자 조회
-        user = User.query.filter_by(email=email).first()
-
-        if not user:
-            return jsonify({"error": "이메일 또는 비밀번호가 일치하지 않습니다."}), 401
-
-        # 소셜 로그인 계정 체크
-        if user.account_type != "local":
-            return (
-                jsonify(
-                    {
-                        "error": f"{user.account_type.upper()} 계정입니다. 해당 소셜 로그인을 이용해주세요."
-                    }
-                ),
-                400,
-            )
-
-        # 비밀번호 검증
-        if not verify_password(password, user.password_hash):
-            return jsonify({"error": "이메일 또는 비밀번호가 일치하지 않습니다."}), 401
-
-        # 활성화 상태 확인
-        if not user.is_active:
-            return (
-                jsonify({"error": "비활성화된 계정입니다. 관리자에게 문의하세요."}),
-                403,
-            )
-
-        # 세션에 사용자 정보 저장
-        session.clear()  # 기존 세션 클리어
-        session["user_id"] = user.id
-        session["email"] = user.email
-        session["nickname"] = user.nickname
-        session["account_type"] = user.account_type
-        session.permanent = True  # 세션 유지 (7일)
-
-        # 마지막 로그인 시간 업데이트
-        user.last_login = datetime.now()
-        db.session.commit()
-
-        app.logger.info(f"✅ 로그인 성공: {email} ({user.nickname})")
-
-        return (
-            jsonify(
-                {
-                    "success": True,
-                    "message": "로그인되었습니다.",
-                    "user": {
-                        "id": user.id,
-                        "email": user.email,
-                        "nickname": user.nickname,
-                        "account_type": user.account_type,
-                    },
-                }
-            ),
-            200,
-        )
-
-    except Exception as e:
-        app.logger.error(f"로그인 오류: {e}")
-        traceback.print_exc()
-        return jsonify({"error": "로그인 중 오류가 발생했습니다."}), 500
-
-
-@app.route("/api/logout", methods=["POST"])
-def api_logout():
-    """로그아웃 처리"""
-    try:
-        email = session.get("email", "Unknown")
-        session.clear()
-        app.logger.info(f"✅ 로그아웃: {email}")
-
-        return jsonify({"success": True, "message": "로그아웃되었습니다."}), 200
-
-    except Exception as e:
-        app.logger.error(f"로그아웃 오류: {e}")
-        return jsonify({"error": "로그아웃 중 오류가 발생했습니다."}), 500
-
-
-@app.route("/api/me", methods=["GET"])
-def get_current_user():
-    """현재 로그인한 사용자 정보 조회"""
-    try:
-        if "user_id" not in session:
-            return jsonify({"logged_in": False}), 200
-
-        user = User.query.get(session["user_id"])
-
-        if not user:
-            session.clear()
-            return jsonify({"logged_in": False}), 200
-
-        return (
-            jsonify(
-                {
-                    "logged_in": True,
-                    "user": {
-                        "id": user.id,
-                        "email": user.email,
-                        "nickname": user.nickname,
-                        "account_type": user.account_type,
-                        "is_admin": user.is_admin,
-                    },
-                }
-            ),
-            200,
-        )
-
-    except Exception as e:
-        app.logger.error(f"사용자 정보 조회 오류: {e}")
-        return jsonify({"error": "사용자 정보 조회 중 오류가 발생했습니다."}), 500
-
-
-@app.route("/api/check-email", methods=["POST"])
-def check_email():
-    """이메일 중복 체크"""
-    try:
-        data = request.json
-        email = data.get("email")
-
-        if not email:
-            return jsonify({"error": "이메일을 입력해주세요."}), 400
-
-        # 이메일 형식 검증
-        import re
-
-        email_pattern = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
-        if not re.match(email_pattern, email):
-            return jsonify({"error": "올바른 이메일 형식이 아닙니다."}), 400
-
-        # 중복 체크
-        existing_user = User.query.filter_by(email=email).first()
-
-        if existing_user:
-            return (
-                jsonify({"exists": True, "message": "이미 가입된 이메일입니다."}),
-                200,
-            )
-
-        return jsonify({"exists": False, "message": "사용 가능한 이메일입니다."}), 200
-
-    except Exception as e:
-        app.logger.error(f"이메일 체크 오류: {e}")
-        return jsonify({"error": "이메일 확인 중 오류가 발생했습니다."}), 500
-
-
-@app.route("/api/send-verification", methods=["POST"])
-def send_verification():
-    """이메일 인증번호 전송"""
-    try:
-        data = request.json
-        email = data.get("email")
-
-        if not email:
-            return jsonify({"error": "이메일을 입력해주세요."}), 400
-
-        # 이미 가입된 이메일인지 체크
-        existing_user = User.query.filter_by(email=email).first()
-        if existing_user:
-            return jsonify({"error": "이미 가입된 이메일입니다."}), 400
-
-        # DEBUG 모드인 경우 자동 인증 처리
-        if DEBUG:
-            # 기존 인증번호 삭제
-            EmailVerification.query.filter_by(email=email).delete()
-
-            # 자동 인증 완료된 레코드 생성
-            code = "000000"
-            expires_at = datetime.now() + timedelta(minutes=5)
-            verification = EmailVerification(
-                email=email,
-                code=code,
-                expires_at=expires_at,
-                is_verified=True,  # DEBUG 모드에서는 바로 인증 완료
-            )
-            db.session.add(verification)
-            db.session.commit()
-
-            app.logger.info(f"🔧 [DEBUG 모드] 이메일 자동 인증: {email}")
-            return (
-                jsonify(
-                    {
-                        "success": True,
-                        "message": "[DEBUG 모드] 이메일 인증이 자동으로 완료되었습니다.",
-                        "expires_in": 300,
-                        "debug_mode": True,
-                    }
-                ),
-                200,
-            )
-
-        # 기존 인증번호 삭제 (같은 이메일)
-        EmailVerification.query.filter_by(email=email, is_verified=False).delete()
-
-        # 인증번호 생성
-        code = generate_verification_code()
-        expires_at = datetime.now() + timedelta(minutes=5)
-
-        # DB에 저장
-        verification = EmailVerification(email=email, code=code, expires_at=expires_at)
-        db.session.add(verification)
-        db.session.commit()
-
-        # 이메일 전송
-        if send_verification_email(email, code):
-            return (
-                jsonify(
-                    {
-                        "success": True,
-                        "message": "인증번호가 이메일로 전송되었습니다.",
-                        "expires_in": 300,  # 5분
-                    }
-                ),
-                200,
-            )
-        else:
-            return jsonify({"error": "이메일 전송에 실패했습니다."}), 500
-
-    except Exception as e:
-        db.session.rollback()
-        app.logger.error(f"인증번호 전송 오류: {e}")
-        return jsonify({"error": "인증번호 전송 중 오류가 발생했습니다."}), 500
-
-
-@app.route("/api/verify-code", methods=["POST"])
-def verify_code():
-    """인증번호 확인"""
-    try:
-        data = request.json
-        email = data.get("email")
-        code = data.get("code")
-
-        if not email or not code:
-            return jsonify({"error": "이메일과 인증번호를 입력해주세요."}), 400
-
-        # DEBUG 모드인 경우 모든 인증번호 통과
-        if DEBUG:
-            # 이미 인증된 레코드가 있는지 확인
-            verification = (
-                EmailVerification.query.filter_by(email=email, is_verified=True)
-                .order_by(EmailVerification.created_at.desc())
-                .first()
-            )
-
-            # 없으면 새로 생성
-            if not verification:
-                verification = EmailVerification(
-                    email=email,
-                    code="000000",
-                    expires_at=datetime.now() + timedelta(minutes=5),
-                    is_verified=True,
-                )
-                db.session.add(verification)
-                db.session.commit()
-
-            app.logger.info(f"🔧 [DEBUG 모드] 인증번호 자동 통과: {email}")
-            return (
-                jsonify(
-                    {
-                        "success": True,
-                        "message": "[DEBUG 모드] 이메일 인증이 자동으로 완료되었습니다.",
-                    }
-                ),
-                200,
-            )
-
-        # 인증번호 조회
-        verification = (
-            EmailVerification.query.filter_by(email=email, code=code, is_verified=False)
-            .order_by(EmailVerification.created_at.desc())
-            .first()
-        )
-
-        if not verification:
-            return jsonify({"error": "잘못된 인증번호입니다."}), 400
-
-        # 만료 시간 체크
-        if datetime.now() > verification.expires_at:
-            return (
-                jsonify({"error": "인증번호가 만료되었습니다. 다시 요청해주세요."}),
-                400,
-            )
-
-        # 인증 완료 처리
-        verification.is_verified = True
-        db.session.commit()
-
-        return (
-            jsonify({"success": True, "message": "이메일 인증이 완료되었습니다."}),
-            200,
-        )
-
-    except Exception as e:
-        db.session.rollback()
-        app.logger.error(f"인증번호 확인 오류: {e}")
-        return jsonify({"error": "인증번호 확인 중 오류가 발생했습니다."}), 500
-
-
-@app.route("/api/check-nickname", methods=["POST"])
-def check_nickname():
-    """닉네임 중복 체크"""
-    try:
-        data = request.json
-        nickname = data.get("nickname")
-
-        if not nickname:
-            return jsonify({"error": "닉네임을 입력해주세요."}), 400
-
-        # 닉네임 길이 체크
-        if len(nickname) < 2 or len(nickname) > 20:
-            return jsonify({"error": "닉네임은 2~20자 사이여야 합니다."}), 400
-
-        # 중복 체크
-        existing_user = User.query.filter_by(nickname=nickname).first()
-
-        if existing_user:
-            return (
-                jsonify({"exists": True, "message": "이미 사용 중인 닉네임입니다."}),
-                200,
-            )
-
-        return jsonify({"exists": False, "message": "사용 가능한 닉네임입니다."}), 200
-
-    except Exception as e:
-        app.logger.error(f"닉네임 체크 오류: {e}")
-        return jsonify({"error": "닉네임 확인 중 오류가 발생했습니다."}), 500
-
-
-@app.route("/api/signup", methods=["POST"])
-def api_signup():
-    """회원가입 처리"""
-    try:
-        data = request.json
-        email = data.get("email")
-        password = data.get("password")
-        nickname = data.get("nickname")
-        account_type = data.get("account_type", "local")  # 기본값: local
-
-        # 필수 필드 검증
-        if not email or not nickname:
-            return jsonify({"error": "이메일과 닉네임을 입력해주세요."}), 400
-
-        # 로컬 가입인 경우 비밀번호 필수
-        if account_type == "local" and not password:
-            return jsonify({"error": "비밀번호를 입력해주세요."}), 400
-
-        # account_type 검증
-        if account_type not in ["local", "google", "kakao"]:
-            return jsonify({"error": "올바른 회원 유형이 아닙니다."}), 400
-
-        # 이메일 인증 확인 (로컬 가입만)
-        if account_type == "local":
-            verification = (
-                EmailVerification.query.filter_by(email=email, is_verified=True)
-                .order_by(EmailVerification.created_at.desc())
-                .first()
-            )
-
-            if not verification:
-                return jsonify({"error": "이메일 인증이 완료되지 않았습니다."}), 400
-
-        # 이메일 중복 체크 (재확인)
-        if User.query.filter_by(email=email).first():
-            return jsonify({"error": "이미 가입된 이메일입니다."}), 400
-
-        # 닉네임 중복 체크 (재확인)
-        if User.query.filter_by(nickname=nickname).first():
-            return jsonify({"error": "이미 사용 중인 닉네임입니다."}), 400
-
-        # 비밀번호 해싱 (로컬 가입만)
-        password_hash = None
-        if account_type == "local":
-            password_hash = hash_password(password)
-
-        # 사용자 생성
-        new_user = User(
-            email=email,
-            password_hash=password_hash,
-            nickname=nickname,
-            account_type=account_type,
-        )
-
-        db.session.add(new_user)
-        db.session.commit()
-
-        app.logger.info(f"✅ 회원가입 성공: {email} ({nickname}) - {account_type}")
-
-        return (
-            jsonify(
-                {
-                    "success": True,
-                    "message": "회원가입이 완료되었습니다.",
-                    "user_id": new_user.id,
-                }
-            ),
-            201,
-        )
-
-    except Exception as e:
-        db.session.rollback()
-        app.logger.error(f"회원가입 오류: {e}")
-        traceback.print_exc()
-        return jsonify({"error": "회원가입 중 오류가 발생했습니다."}), 500
-
-
-@app.route("/api/rankings", methods=["GET"])
-def get_rankings():
-    """포트폴리오 랭킹 데이터 조회"""
-    try:
-        import json
-
-        # 벤치마크 필터 파라미터 받기
-        benchmark_filter = request.args.get("benchmark", None)
-
-        # 벤치마크 매핑 (프론트엔드 표시명 -> 실제 티커들)
-        # 여러 가능한 티커를 리스트로 관리
-        benchmark_mapping = {
-            "S&P500": ["SPY", "^GSPC"],
-            "NASDAQ100": ["QQQ", "^NDX"],
-            "KODEX200": ["069500.KS"],
-        }
-
-        portfolios = SavedPortfolio.query.all()
-
-        if not portfolios:
-            return jsonify(
-                {"cagr": [], "sortino": [], "sharpe": [], "alpha": [], "beta": []}
-            )
-
-        # 포트폴리오 데이터 파싱
-        portfolio_list = []
-        for p in portfolios:
-            p: SavedPortfolio
-            try:
-                data = json.loads(p.csv_content)
-
-                # 벤치마크 필터링
-                if benchmark_filter and benchmark_filter != "전체":
-                    expected_tickers = benchmark_mapping.get(benchmark_filter, [])
-                    # benchmark_ticker가 없거나 일치하지 않으면 스킵
-                    if (
-                        not p.benchmark_ticker
-                        or p.benchmark_ticker not in expected_tickers
-                    ):
-                        continue
-
-                # 사용자 닉네임 가져오기
-                owner_nickname = "익명"
-                if p.user_id:
-                    owner = User.query.get(p.user_id)
-                    if owner:
-                        owner_nickname = owner.nickname
-
-                # 벤치마크 이름 가져오기
-                summary = data.get("summary", {})
-                benchmark_name = summary.get("benchmark_name", p.benchmark_ticker)
-
-                portfolio_list.append(
-                    {
-                        "id": p.id,
-                        "name": p.name,
-                        "created_at": p.created_at.isoformat(),
-                        "benchmark": p.benchmark_ticker,
-                        "benchmark_name": benchmark_name,
-                        "owner_nickname": owner_nickname,
-                        "metrics": data.get("metrics", {}),
-                    }
-                )
-            except Exception as e:
-                print(f"Error parsing portfolio {p.id}: {e}")
-                continue
-
-        # 각 지표별 Top 5
-        cagr_top = sorted(
-            portfolio_list,
-            key=lambda x: x["metrics"].get("cagr", -999999),
-            reverse=True,
-        )[:5]
-        sortino_top = sorted(
-            portfolio_list,
-            key=lambda x: x["metrics"].get("sortino_ratio", -999999),
-            reverse=True,
-        )[:5]
-        sharpe_top = sorted(
-            portfolio_list,
-            key=lambda x: x["metrics"].get("sharpe_ratio", -999999),
-            reverse=True,
-        )[:5]
-        alpha_top = sorted(
-            portfolio_list,
-            key=lambda x: x["metrics"].get("alpha", -999999),
-            reverse=True,
-        )[:5]
-
-        # 베타는 1.0에 가까운 순
-        beta_top = sorted(
-            portfolio_list, key=lambda x: abs(x["metrics"].get("beta", 999999) - 1.0)
-        )[:5]
-
-        return jsonify(
-            {
-                "cagr": cagr_top,
-                "sortino": sortino_top,
-                "sharpe": sharpe_top,
-                "alpha": alpha_top,
-                "beta": beta_top,
-            }
-        )
-
-    except Exception as e:
-        error_trace = traceback.format_exc()
-        print("=" * 80)
-        print("❌ ERROR in /api/rankings endpoint:")
-        print(error_trace)
-        print("=" * 80)
-        return jsonify({"error": str(e)}), 500
-
-
-@app.route("/portfolio/<int:portfolio_id>")
-def view_portfolio(portfolio_id):
-    """저장된 포트폴리오 상세보기"""
-    try:
-        import json
-
-        portfolio: SavedPortfolio = SavedPortfolio.query.get_or_404(portfolio_id)
-
-        # 마지막 접근 시간 업데이트
-        portfolio.last_accessed = datetime.now()
-        db.session.commit()
-
-        # 데이터 파싱
-        data = json.loads(portfolio.csv_content)
-
-        # 사용자 닉네임 가져오기
-        owner_nickname = "익명"
-        if portfolio.user_id:
-            owner = User.query.get(portfolio.user_id)
-            if owner:
-                owner_nickname = owner.nickname
-
-        # 소유자 여부 확인
-        is_owner = False
-        if "user_id" in session and portfolio.user_id == session["user_id"]:
-            is_owner = True
-
-        # 분석 결과 페이지에 전달
-        return render_template(
-            "portfolio_view.html",
-            portfolio=portfolio,
-            data=data,
-            owner_nickname=owner_nickname,
-            is_owner=is_owner,
-        )
-
-    except Exception as e:
-        error_trace = traceback.format_exc()
-        app.logger.warning("❌ ERROR in /portfolio/<id> endpoint:")
-        app.logger.warning(error_trace)
-        return f"포트폴리오를 불러올 수 없습니다: {str(e)}", 500
 
 
 @app.route("/parse-csv", methods=["POST"])
@@ -3145,7 +2187,7 @@ def parse_csv():
         app.logger.info(f"📁 Parsing CSV file: {file.filename}")
 
         # CSV 파일 파싱
-        csv_content = file.read().decode("utf-8")
+        csv_content = file.read().decode("utf-8-sig")
         portfolio_df = pd.read_csv(io.StringIO(csv_content))
 
         # 필수 컬럼 확인
@@ -3236,7 +2278,7 @@ def analyze():
             return jsonify({"error": "시작 일자와 벤치마크 티커를 입력해주세요."}), 400
 
         # CSV 파일 파싱
-        csv_content = file.read().decode("utf-8")
+        csv_content = file.read().decode("utf-8-sig")
         app.logger.info(f"📄 CSV content length: {len(csv_content)} bytes")
 
         portfolio_df = pd.read_csv(io.StringIO(csv_content))
@@ -3518,179 +2560,10 @@ def analyze():
         )
 
 
-@app.route("/api/ai-analysis", methods=["POST"])
-def ai_analysis():
-    """OpenAI를 사용한 포트폴리오 AI 분석"""
-    try:
-        # 로그인 체크 - 필수
-        if "user_id" not in session:
-            return (
-                jsonify({"success": False, "error": "로그인이 필요한 기능입니다."}),
-                401,
-            )
 
-        import json
-        from datetime import datetime, timedelta
 
-        # 세션에서 user_id 가져오기 (user_id 기반 rate limiting)
-        user_id = session.get("user_id")
 
-        current_time = datetime.now()
 
-        # Rate limiting 체크 (1분에 1번) - user_id 기반
-        if user_id in ai_analysis_rate_limit:
-            last_request = ai_analysis_rate_limit[user_id]
-            time_diff = (current_time - last_request).total_seconds()
-
-            if time_diff < 60:  # 60초 = 1분
-                remaining_seconds = int(60 - time_diff)
-                return (
-                    jsonify(
-                        {
-                            "success": False,
-                            "error": f"AI 분석은 1분에 1번만 가능합니다. {remaining_seconds}초 후에 다시 시도해주세요.",
-                            "rate_limited": True,
-                            "remaining_seconds": remaining_seconds,
-                        }
-                    ),
-                    429,
-                )
-
-        data: dict = request.json
-
-        # 필요한 데이터 추출
-        holdings: list = data.get("holdings", [])
-        metrics: dict = data.get("metrics", {})
-        summary: dict = data.get("summary", {})
-        benchmark: str = summary.get("benchmark", "Unknown")
-
-        # 캐시 키 생성 (holdings의 티커와 비중으로)
-        cache_key = json.dumps(
-            {
-                "holdings": sorted([(h["ticker"], h["weight"]) for h in holdings]),
-                "cagr": metrics.get("cagr"),
-                "sharpe": metrics.get("sharpe_ratio"),
-                "benchmark": benchmark,
-            },
-            sort_keys=True,
-        )
-
-        # 캐시에서 확인 (같은 포트폴리오는 재분석하지 않음) - user_id 기반
-        if user_id in ai_analysis_cache:
-            cached_data = ai_analysis_cache[user_id]
-            if cached_data.get("cache_key") == cache_key:
-                app.logger.info(
-                    f"✅ Returning cached AI analysis for user_id: {user_id}"
-                )
-                return jsonify(
-                    {"success": True, "analysis": cached_data["result"], "cached": True}
-                )
-
-        # 벤치마크 이름 매핑
-        benchmark_names = {
-            "SPY": "S&P 500",
-            "^GSPC": "S&P 500",
-            "QQQ": "NASDAQ 100",
-            "^NDX": "NASDAQ 100",
-            "069500.KS": "KOSPI 200",
-        }
-        benchmark_name = benchmark_names.get(benchmark, benchmark)
-
-        # 보유 종목 정보 포맷팅
-        holdings_text = "\n".join(
-            [f"- {h['ticker']} ({h['name']}): {h['weight']}%" for h in holdings]
-        )
-
-        # 프롬프트 구성
-        prompt = f"""
-        You are a professional portfolio analyst. Analyze the following portfolio and produce a structured Korean report.
-
-        ### Portfolio Holdings
-        {holdings_text}
-
-        ### Performance Metrics
-        - CAGR: {metrics.get('cagr', 'N/A')}%
-        - Sharpe Ratio: {metrics.get('sharpe_ratio', 'N/A')}
-        - Sortino Ratio: {metrics.get('sortino_ratio', 'N/A')}
-        - Alpha: {metrics.get('alpha', 'N/A')}%
-        - Beta: {metrics.get('beta', 'N/A')}
-        - Volatility: {metrics.get('volatility', 'N/A')}%
-        - Max Drawdown (MDD): {metrics.get('max_drawdown', 'N/A')}%
-
-        ### Benchmark ({benchmark_name})
-        - Benchmark CAGR: {metrics.get('benchmark_annual_return', 'N/A')}%
-        - Benchmark Sharpe: {metrics.get('benchmark_sharpe_ratio', 'N/A')}
-        - Benchmark Sortino: {metrics.get('benchmark_sortino_ratio', 'N/A')}
-        - Benchmark Volatility: {metrics.get('benchmark_volatility', 'N/A')}%
-
-        ### Output Requirements
-        - **Write the response only in Korean**
-        - **Do not include any introductory phrases such as "Certainly", "Here is", or similar**
-        - Format in **Markdown**
-        - Maintain a professional, direct, and objective tone
-        - Use appropriate emojis to improve readability
-        - The analysis must have exactly three sections with `##` headers:
-
-        1. **포트폴리오 강점 분석**
-        - 벤치마크 대비 강점
-        - 위험 대비 성과가 좋은 이유
-        - 구성 측면의 장점
-
-        2. **포트폴리오 약점 및 위험 요소**
-        - 부족한 지표
-        - 잠재적 리스크
-        - 벤치마크 대비 취약 지점
-
-        3. **개선 제안**
-        - 실행 가능한 개선 전략
-        - 리밸런싱 제안
-        - 편입/제외 고려 종목
-
-        Respond in a clear, highly analytical style, with actionable insights and no unnecessary sentences.
-        """
-
-        # OpenAI API 호출
-        app.logger.info("🤖 Calling OpenAI API...")
-
-        response = openai.chat.completions.create(
-            model="gpt-4o",
-            messages=[
-                {
-                    "role": "system",
-                    "content": "당신은 20년 경력의 전문 포트폴리오 분석가입니다. 데이터 기반으로 객관적이고 실용적인 조언을 제공합니다.",
-                },
-                {"role": "user", "content": prompt},
-            ],
-            temperature=0.7,
-            max_tokens=2000,
-        )
-
-        analysis_result = response.choices[0].message.content
-
-        app.logger.info("✅ OpenAI API call successful")
-
-        # Rate limit 업데이트 (user_id 기반)
-        ai_analysis_rate_limit[user_id] = current_time
-
-        # 캐시 저장 (user_id 기반)
-        ai_analysis_cache[user_id] = {
-            "cache_key": cache_key,
-            "result": analysis_result,
-            "timestamp": current_time,
-        }
-
-        return jsonify({"success": True, "analysis": analysis_result, "cached": False})
-
-    except Exception as e:
-        error_trace = traceback.format_exc()
-        app.logger.warning("❌ ERROR in /api/ai-analysis endpoint:")
-        app.logger.warning(error_trace)
-        return (
-            jsonify(
-                {"success": False, "error": f"AI 분석 중 오류가 발생했습니다: {str(e)}"}
-            ),
-            500,
-        )
 
 
 if __name__ == "__main__":

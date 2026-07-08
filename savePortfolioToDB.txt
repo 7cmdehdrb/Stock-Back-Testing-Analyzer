@@ -1,0 +1,25 @@
+async function savePortfolioToDB() {
+            const name = document.getElementById('portfolioName').value.trim();
+            if (!name) {
+                showToast('포트폴리오 이름을 입력하세요.');
+                return;
+            }
+
+            const csvContent = convertManualInputToCSV(); // existing function
+            if (!csvContent) {
+                showToast('포트폴리오 내용이 없습니다.');
+                return;
+            }
+
+            const payload = {
+                name: name,
+                csv_content: csvContent,
+                start_date: document.getElementById('startDate').value,
+                benchmark_ticker: document.getElementById('benchmarkTicker').value,
+                base_currency: document.getElementById('baseCurrency').value
+            };
+
+            try {
+                saveLocalPortfolio(payload);
+                showToast('저장되었습니다!');
+            } catch

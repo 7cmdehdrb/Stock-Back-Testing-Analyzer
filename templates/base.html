@@ -136,9 +136,6 @@
                 <a href="/" class="navbar-title">📊 포트폴리오 성과 분석기</a>
                 <div class="navbar-links">
                     <a href="/" class="navbar-link {% if active_page == 'analyze' %}active{% endif %}">분석하기</a>
-                    <a href="/ranking" class="navbar-link {% if active_page == 'ranking' %}active{% endif %}">랭킹보기</a>
-                    <!-- <a href="/exchange-rate" class="navbar-link {% if active_page == 'exchange-rate' %}active{% endif %}">환율</a> -->
-                    <a href="/login" class="navbar-link" id="authLink">로그인</a>
                 </div>
             </div>
         </div>
@@ -146,35 +143,7 @@
         {% block content %}{% endblock %}
     </div>
 
-    <script>
-        // 로그인 상태 확인 및 UI 업데이트
-        async function checkLoginStatus() {
-            try {
-                const response = await fetch('/api/me');
-                const data = await response.json();
 
-                const authLink = document.getElementById('authLink');
-                if (data.logged_in) {
-                    authLink.textContent = `👤 ${data.user.nickname}`;
-                    authLink.href = '/mypage';
-                    {% if active_page == 'mypage' %}
-                    authLink.classList.add('active');
-                    {% endif %}
-                } else {
-                    authLink.textContent = '로그인';
-                    authLink.href = '/login';
-                    {% if active_page == 'login' %}
-                    authLink.classList.add('active');
-                    {% endif %}
-                }
-            } catch (error) {
-                console.error('로그인 상태 확인 실패:', error);
-            }
-        }
-
-        // 페이지 로드 시 로그인 상태 확인
-        checkLoginStatus();
-    </script>
 
     {% block extra_scripts %}{% endblock %}
 </body>
