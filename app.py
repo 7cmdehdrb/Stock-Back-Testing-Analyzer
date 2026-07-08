@@ -26,22 +26,18 @@ load_dotenv()
 # Flask 및 SQLAlchemy 설정
 app = Flask(__name__)
 app.config["SECRET_KEY"] = os.getenv("SECRET_KEY")
-app.config["SQLALCHEMY_DATABASE_URI"] = (
-    f"sqlite:///{os.path.join(os.path.dirname(__file__), 'stock_cache.db')}"
-)
+# DB 파일 경로 - DATA_DIR 환경변수로 오버라이드 가능 (Docker 볼륨 마운트용)
+_data_dir = os.getenv("DATA_DIR", os.path.dirname(__file__))
+os.makedirs(_data_dir, exist_ok=True)
+DB_PATH = os.path.join(_data_dir, "stock_cache.db")
+
+app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{DB_PATH}"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 # 세션 설정
 app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(days=7)  # 세션 유효기간 7일
 
-# OpenAI API 키 설정
 DEBUG = os.getenv("DEBUG", "False").lower() == "true"
-
-# AI 분석 rate limiting과 캐싱을 위한 딕셔너리
-# AI 분석 rate limiting과 캐싱을 위한 딕셔너리 (user_id 기반)
-
-# DB 파일 경로
-DB_PATH = os.path.join(os.path.dirname(__file__), "stock_cache.db")
 
 # 헤지펀드 벤치마크 매핑
 HEDGEFUND_BENCHMARKS = {

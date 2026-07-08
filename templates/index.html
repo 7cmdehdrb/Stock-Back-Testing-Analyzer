@@ -302,6 +302,14 @@
             }
         }
 
+                /* Holdings table: hide 종목명 column on mobile */
+        @media (max-width: 600px) {
+            #holdingsTable th:nth-child(2),
+            #holdingsTable td:nth-child(2) {
+                display: none;
+            }
+        }
+
         @media (max-width: 480px) {
             body {
                 padding: 10px; /* Restored left/right body padding */
@@ -385,21 +393,27 @@
         .metric-card {
             padding: 20px;
             border-radius: 12px;
-            color: white;
+            color: #1e293b;
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(0,0,0,0.08);
+            position: relative;
+            overflow: hidden;
         }
 
         .metric-label {
             font-size: 12px;
-            opacity: 0.9;
+            color: #475569;
             margin-bottom: 8px;
             font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         .metric-value {
             font-size: 30px;
             font-weight: 700;
             margin-bottom: 6px;
+            color: #0f172a;
         }
 
         .chart-container {
@@ -1469,12 +1483,6 @@
                         ${metrics.cagr >= 0 ? '+' : ''}${metrics.cagr}%
                     </div>
                 </div>
-                <div class="summary-item">
-                    <div class="summary-label">최대 낙폭 (MDD)</div>
-                    <div class="summary-value negative">
-                        ${metrics.mdd}%
-                    </div>
-                </div>
             `;
 
             // 도넛 차트 생성
@@ -1535,7 +1543,7 @@
                 <div class="metric-card" style="background: ${getGradientColor(metrics.sharpe_ratio, metrics.benchmark_sharpe_ratio, 'higher')};">
                     <div class="metric-label">샤프 비율 (Sharpe Ratio)</div>
                     <div class="metric-value" >${metrics.sharpe_ratio}</div>
-                    <div class="metric-description" style="font-size: 11px; color: #444;">
+                    <div class="metric-description" style="font-size: 11px; color: #475569;">
                         벤치마크: ${metrics.benchmark_sharpe_ratio}<br>
                         위험 대비 수익률. 높을수록 좋음
                     </div>
@@ -1543,7 +1551,7 @@
                 <div class="metric-card" style="background: ${getGradientColor(metrics.sortino_ratio, metrics.benchmark_sortino_ratio, 'higher')};">
                     <div class="metric-label">소티노 비율 (Sortino Ratio)</div>
                     <div class="metric-value" >${metrics.sortino_ratio}</div>
-                    <div class="metric-description" style="font-size: 11px; color: #444;">
+                    <div class="metric-description" style="font-size: 11px; color: #475569;">
                         벤치마크: ${metrics.benchmark_sortino_ratio}<br>
                         하방 위험 대비 수익률. 높을수록 좋음
                     </div>
@@ -1553,7 +1561,7 @@
                     <div class="metric-value" >
                         ${metrics.alpha >= 0 ? '+' : ''}${metrics.alpha}%
                     </div>
-                    <div class="metric-description" style="font-size: 11px; color: #444;">
+                    <div class="metric-description" style="font-size: 11px; color: #475569;">
                         벤치마크: 0%<br>
                         벤치마크 대비 초과 수익률
                     </div>
@@ -1561,7 +1569,7 @@
                 <div class="metric-card" style="background: ${getGradientColor(Math.abs(metrics.beta - 1), 0, 'lower')};">
                     <div class="metric-label">베타 (Beta)</div>
                     <div class="metric-value" >${metrics.beta}</div>
-                    <div class="metric-description" style="font-size: 11px; color: #444;">
+                    <div class="metric-description" style="font-size: 11px; color: #475569;">
                         벤치마크: 1.0<br>
                         시장 민감도. 1.0 = 시장과 동일
                     </div>
@@ -1571,7 +1579,7 @@
                     <div class="metric-value" >
                         ${metrics.cagr >= 0 ? '+' : ''}${metrics.cagr}%
                     </div>
-                    <div class="metric-description" style="font-size: 11px; color: #444;">
+                    <div class="metric-description" style="font-size: 11px; color: #475569;">
                         벤치마크: ${metrics.benchmark_annual_return >= 0 ? '+' : ''}${metrics.benchmark_annual_return}%<br>
                         연간 복리 수익률
                     </div>
@@ -1580,7 +1588,7 @@
                 <div class="metric-card" style="background: ${getGradientColor(metrics.mdd, metrics.benchmark_mdd, 'higher')};">
                     <div class="metric-label">최대 낙폭 (MDD)</div>
                     <div class="metric-value" >${metrics.mdd}%</div>
-                    <div class="metric-description" style="font-size: 11px; color: #444;">
+                    <div class="metric-description" style="font-size: 11px; color: #475569;">
                         벤치마크: ${metrics.benchmark_mdd}%<br>
                         최고점 대비 최대 하락폭. 0에 가까울수록 방어력이 좋음
                     </div>

@@ -1,22 +1,24 @@
-# Dockerfile for Stock Analyzer
-# Python 3.13.7
+# Dockerfile for Stock Portfolio Analyzer
+# Optimized for OMV Docker Compose deployment
 
 FROM python:3.12-slim
 
 # Set working directory
 WORKDIR /app
 
-# Install system dependencies if needed (e.g. for sqlite3 or gcc)
-# Slim image usually suffices for pure python, but adding basics is good practice
+# Install system dependencies
+# - gcc / build-essential: needed for some Python packages (numpy, pandas)
+# - curl: needed for Docker healthcheck
 RUN apt-get update && apt-get install -y \
     --no-install-recommends \
     gcc \
     libc6-dev \
     python3-dev \
     build-essential \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements file
+# Copy requirements first for layer caching
 COPY requirements.txt .
 
 # Install Python dependencies
@@ -25,11 +27,22 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy application code
 COPY . .
 
-# Expose port (optional, but good for documentation)
+# Create the data directory for SQLite DB persistence via volume mount
+RUN mkdir -p /data
+
+# Expose port
 EXPOSE 8000
 
-# Set environment variable defaults
-ENV PORT=8000
+# Environment variable defaults
+ENV PORT=8000 \
+    DATA_DIR=/data \
+    DEBUG=false
 
-# Run the application with Gunicorn
-CMD gunicorn --bind 0.0.0.0:$PORT --workers 2 wsgi:application
+# Run with Gunicorn (2 workers is fine for home server; increase if needed)
+CMD gunicorn \
+    --bind 0.0.0.0:$PORT \
+    --workers 2 \
+    --timeout 120 \
+    --access-logfile - \
+    --error-logfile - \
+    wsgi:application

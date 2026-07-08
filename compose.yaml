@@ -1,0 +1,24 @@
+services:
+  stock-analyzer:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: stock-analyzer
+    restart: unless-stopped
+    ports:
+      - "8088:80"
+    volumes:
+      # DB 영구 보존: 절대경로 바인드 마운트 (Compose 웹 UI 호환)
+      - /appdata/Stock-Back-Testing-Analyzer/data:/data
+    environment:
+      PORT: 80
+      DATA_DIR: /data
+      SECRET_KEY: "여기에_시크릿_키_입력"
+      DEBUG: "false"
+      TZ: Asia/Seoul
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
