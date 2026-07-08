@@ -60,13 +60,31 @@ db = SQLAlchemy(app)
 
 
 # SQLAlchemy 모델 정의
-class StockPriceCache(db.Model):
-    __tablename__ = "stock_price_cache"
+class Stock(db.Model):
+    __tablename__ = "stock"
 
     ticker = db.Column(db.String(20), primary_key=True)
-    date = db.Column(db.String(10), primary_key=True)
+    name = db.Column(db.String(100), nullable=True)
+    country = db.Column(db.String(20), nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.now)
+
+    def __repr__(self):
+        return f"<Stock {self.ticker}>"
+
+
+class StockPrice(db.Model):
+    __tablename__ = "stock_price"
+
+    id = db.Column(db.Integer, primary_key=True)
+    ticker = db.Column(db.String(20), db.ForeignKey("stock.ticker"), nullable=False, index=True)
+    date = db.Column(db.String(10), nullable=False, index=True)
     close_price = db.Column(db.Float, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.now)
+
+    stock = db.relationship("Stock", backref=db.backref("prices", lazy=True, cascade="all, delete-orphan"))
+
+    # 중복 방지 고유 제약조건
+    __table_args__ = (db.UniqueConstraint("ticker", "date", name="_ticker_date_uc"),)
 
     def __repr__(self):
         return f"<StockPrice {self.ticker} {self.date}>"
@@ -96,16 +114,28 @@ class ExchangeRateCache(db.Model):
 
 
 # Flask-Admin ModelView 정의
-class StockPriceCacheAdmin(ModelView):
+class StockAdmin(ModelView):
     def is_accessible(self):
-        """접근 권한 확인"""
         return session.get("admin_authenticated", False)
 
     def inaccessible_callback(self, name, **kwargs):
-        """접근 불가능할 때 로그인 페이지로 리다이렉트"""
         return redirect(url_for("admin_login", next=request.url))
 
-    column_list = ["ticker", "date", "close_price", "created_at"]
+    column_list = ["ticker", "name", "country", "created_at"]
+    column_searchable_list = ["ticker", "name"]
+    column_sortable_list = ["ticker", "created_at"]
+    page_size = 50
+    can_export = True
+
+
+class StockPriceAdmin(ModelView):
+    def is_accessible(self):
+        return session.get("admin_authenticated", False)
+
+    def inaccessible_callback(self, name, **kwargs):
+        return redirect(url_for("admin_login", next=request.url))
+
+    column_list = ["id", "ticker", "date", "close_price", "created_at"]
     column_searchable_list = ["ticker"]
     column_sortable_list = ["ticker", "date", "created_at"]
     column_default_sort = [("ticker", False), ("date", True)]
@@ -181,48 +211,24 @@ class DashboardView(AdminIndexView):
         """대시보드 메인 페이지"""
         # 통계 데이터 수집
         stats = self.get_statistics()
-        recent_users = self.get_recent_users()
-        recent_portfolios = self.get_recent_portfolios()
-        user_type_stats = self.get_user_type_stats()
 
         return self.render(
             "admin/dashboard.html",
             stats=stats,
-            recent_users=recent_users,
-            recent_portfolios=recent_portfolios,
-            user_type_stats=user_type_stats,
+            recent_users=[],
+            recent_portfolios=[],
+            user_type_stats={"local": 0, "google": 0, "kakao": 0},
         )
 
     def get_statistics(self):
         """주요 통계 데이터"""
         try:
-            # 총 회원 수
-            total_users = User.query.count()
-
-            # 오늘 가입한 회원
-            today = datetime.now().date()
-            today_users = User.query.filter(
-                db.func.date(User.created_at) == today
-            ).count()
-
-            # 이번 주 가입한 회원
-            week_ago = datetime.now() - timedelta(days=7)
-            week_users = User.query.filter(User.created_at >= week_ago).count()
-
-            # 총 포트폴리오 수
-            total_portfolios = SavedPortfolio.query.count()
-
-            # 오늘 생성된 포트폴리오
-            today_portfolios = SavedPortfolio.query.filter(
-                db.func.date(SavedPortfolio.created_at) == today
-            ).count()
-
             # 캐시된 주가 데이터 (티커 수)
             conn = sqlite3.connect(DB_PATH)
             cursor = conn.cursor()
-            cursor.execute("SELECT COUNT(DISTINCT ticker) FROM stock_price_cache")
+            cursor.execute("SELECT COUNT(DISTINCT ticker) FROM stock")
             cached_tickers = cursor.fetchone()[0]
-            cursor.execute("SELECT COUNT(*) FROM stock_price_cache")
+            cursor.execute("SELECT COUNT(*) FROM stock_price")
             cached_records = cursor.fetchone()[0]
 
             # 환율 캐시 데이터
@@ -233,11 +239,11 @@ class DashboardView(AdminIndexView):
             conn.close()
 
             return {
-                "total_users": total_users,
-                "today_users": today_users,
-                "week_users": week_users,
-                "total_portfolios": total_portfolios,
-                "today_portfolios": today_portfolios,
+                "total_users": 0,
+                "today_users": 0,
+                "week_users": 0,
+                "total_portfolios": 0,
+                "today_portfolios": 0,
                 "cached_tickers": cached_tickers,
                 "cached_records": cached_records,
                 "exchange_rate_records": exchange_rate_records,
@@ -263,61 +269,6 @@ class DashboardView(AdminIndexView):
                 "exchange_rate_end": "N/A",
             }
 
-    def get_recent_users(self, limit=5):
-        """최근 가입한 회원"""
-        try:
-            users = User.query.order_by(User.created_at.desc()).limit(limit).all()
-            return [
-                {
-                    "id": u.id,
-                    "email": u.email,
-                    "nickname": u.nickname,
-                    "account_type": u.account_type,
-                    "created_at": u.created_at,
-                }
-                for u in users
-            ]
-        except Exception as e:
-            app.logger.error(f"최근 회원 조회 오류: {e}")
-            return []
-
-    def get_recent_portfolios(self, limit=5):
-        """최근 생성된 포트폴리오"""
-        try:
-            portfolios = (
-                SavedPortfolio.query.order_by(SavedPortfolio.created_at.desc())
-                .limit(limit)
-                .all()
-            )
-            return [
-                {
-                    "id": p.id,
-                    "name": p.name,
-                    "benchmark": p.benchmark_ticker,
-                    "created_at": p.created_at,
-                }
-                for p in portfolios
-            ]
-        except Exception as e:
-            app.logger.error(f"최근 포트폴리오 조회 오류: {e}")
-            return []
-
-    def get_user_type_stats(self):
-        """회원 유형별 통계"""
-        try:
-            local_count = User.query.filter_by(account_type="local").count()
-            google_count = User.query.filter_by(account_type="google").count()
-            kakao_count = User.query.filter_by(account_type="kakao").count()
-
-            return {
-                "local": local_count,
-                "google": google_count,
-                "kakao": kakao_count,
-            }
-        except Exception as e:
-            app.logger.error(f"회원 유형 통계 오류: {e}")
-            return {"local": 0, "google": 0, "kakao": 0}
-
 
 # Flask-Admin 초기화
 admin = Admin(
@@ -325,7 +276,8 @@ admin = Admin(
     name="Portfolio Admin",
     index_view=DashboardView(name="Dashboard", url="/admin"),
 )
-admin.add_view(StockPriceCacheAdmin(StockPriceCache, db, name="Stock Prices"))
+admin.add_view(StockAdmin(Stock, db, name="Stocks"))
+admin.add_view(StockPriceAdmin(StockPrice, db, name="Stock Prices"))
 
 admin.add_view(
     ExchangeRateCacheAdmin(ExchangeRateCache, db, name="Exchange Rates")
@@ -337,6 +289,9 @@ def init_database():
     # SQLAlchemy로 테이블 생성 (이미 존재하면 무시)
     with app.app_context():
         db.create_all()
+
+# 앱 로드 시 DB 자동 초기화 (Docker 등 WSGI 환경 대응)
+init_database()
 
 
 def hash_password(password: str) -> str:
@@ -424,7 +379,7 @@ def get_cached_prices(ticker, start_date: pd.Timestamp, end_date: pd.Timestamp):
 
         query = """
             SELECT date, close_price 
-            FROM stock_price_cache 
+            FROM stock_price 
             WHERE ticker = ? AND date >= ? AND date <= ?
             ORDER BY date
         """
@@ -474,10 +429,14 @@ def save_prices_to_cache(ticker, price_series: pd.Series):
         if not data_to_insert:
             return
 
-        # INSERT OR REPLACE로 중복 방지
+        # 먼저 Stock 테이블에 해당 종목이 존재하는지 확인하고, 없으면 생성
+        cursor.execute("SELECT ticker FROM stock WHERE ticker = ?", (ticker,))
+        if not cursor.fetchone():
+            cursor.execute("INSERT INTO stock (ticker, name, country) VALUES (?, ?, ?)", (ticker, ticker, None))
+
         cursor.executemany(
             """
-            INSERT OR REPLACE INTO stock_price_cache (ticker, date, close_price)
+            REPLACE INTO stock_price (ticker, date, close_price)
             VALUES (?, ?, ?)
             """,
             data_to_insert,
@@ -493,17 +452,43 @@ def save_prices_to_cache(ticker, price_series: pd.Series):
 
 
 def get_current_exchange_rate():
-    """현재 USD/KRW 환율 가져오기"""
+    """현재 USD/KRW 환율 가져오기 (DB 캐싱, 1일 1회만 yfinance 호출)"""
     try:
-        # USDKRW=X 티커로 환율 정보 가져오기
+        today_str = datetime.now().strftime("%Y-%m-%d")
+        
+        # 1. DB에 오늘 환율이 있는지 확인
+        cached_rate = ExchangeRateCache.query.filter_by(date=today_str).first()
+        if cached_rate:
+            return cached_rate.close
+            
+        # 2. DB에 없다면 yfinance 호출
         krw = yf.Ticker("USDKRW=X")
         data = krw.history(period="1d")
         if not data.empty:
-            return data["Close"].iloc[-1]
+            rate = float(data["Close"].iloc[-1])
+            
+            # DB에 캐시 저장
+            new_rate = ExchangeRateCache(
+                date=today_str,
+                open=float(data["Open"].iloc[-1]),
+                high=float(data["High"].iloc[-1]),
+                low=float(data["Low"].iloc[-1]),
+                close=rate,
+                volume=float(data["Volume"].iloc[-1]) if "Volume" in data.columns else 0.0
+            )
+            # app context 확인 및 세션 저장
+            try:
+                db.session.add(new_rate)
+                db.session.commit()
+            except Exception as e:
+                db.session.rollback()
+                app.logger.error(f"Failed to cache exchange rate: {e}")
+                
+            return rate
         else:
-            # 기본값 (최근 평균 환율)
             return 1350.0
     except Exception as e:
+        app.logger.warning(f"Error fetching exchange rate: {e}")
         return 1350.0
 
 
@@ -1663,7 +1648,7 @@ def prepare_allocation_data(
     # 시작 시점 배분
     initial_allocation = {}
     for ticker, data in portfolio_data.items():
-        name = data.get("name", ticker)
+        name = ticker
         initial_allocation[name] = data["initial_value"]
 
     # 현금 추가
@@ -1677,7 +1662,7 @@ def prepare_allocation_data(
     # 현재 시점 배분
     current_allocation = {}
     for ticker, data in portfolio_data.items():
-        name = data.get("name", ticker)
+        name = ticker
         current_price = data["prices"].iloc[-1]
         current_value = current_price * data["quantity"]
         current_allocation[name] = current_value
@@ -1786,7 +1771,7 @@ def get_cache_stats():
         conn = sqlite3.connect(DB_PATH, timeout=30.0)
         cursor = conn.cursor()
 
-        cursor.execute("SELECT COUNT(*) FROM stock_price_cache")
+        cursor.execute("SELECT COUNT(DISTINCT ticker) FROM stock")
         stock_result = cursor.fetchone()
         stock_prices = stock_result[0] if stock_result else 0
 
