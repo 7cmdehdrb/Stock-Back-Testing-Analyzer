@@ -14,6 +14,7 @@ services:
       PORT: 80
       DATA_DIR: /data
       SECRET_KEY: "여기에_시크릿_키_입력"
+      ADMIN_PW: "여기에_관리자_비밀번호_입력"
       DEBUG: "false"
       TZ: Asia/Seoul
     healthcheck:

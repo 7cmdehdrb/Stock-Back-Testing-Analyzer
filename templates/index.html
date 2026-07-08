@@ -2170,8 +2170,8 @@
             setTimeout(() => { modal.classList.add('show'); }, 10);
         }
 
-        document.getElementById('confirmDeleteBtn').addEventListener('click', async () => {
-            if (portfolioToDelete) {
+        function confirmDelete() {
+            if (portfolioToDelete !== null) {
                 try {
                     deleteLocalPortfolio(portfolioToDelete);
                     fetchPortfolios();
@@ -2181,7 +2181,7 @@
                 }
                 closeDeleteModal();
             }
-        });
+        }
 
         async function savePortfolioToDB() {
             const name = document.getElementById('portfolioName').value.trim();
@@ -2272,7 +2272,7 @@
             <div class="modal-message">정말 이 포트폴리오를 삭제하시겠습니까?<br>삭제된 데이터는 복구할 수 없습니다.</div>
             <div class="modal-actions">
                 <button class="modal-btn modal-btn-cancel" onclick="closeDeleteModal()">취소</button>
-                <button class="modal-btn modal-btn-confirm" id="confirmDeleteBtn">삭제하기</button>
+                <button class="modal-btn modal-btn-confirm" id="confirmDeleteBtn" onclick="confirmDelete()">삭제하기</button>
             </div>
         </div>
     </div>
