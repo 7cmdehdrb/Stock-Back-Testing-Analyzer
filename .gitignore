@@ -33,7 +33,6 @@
 *.webp
 
 # Portable Network Graphics
-*.png
 
 # Animated Portable Network Graphics
 *.apng
