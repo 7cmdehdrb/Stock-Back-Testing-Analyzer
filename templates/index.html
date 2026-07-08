@@ -350,6 +350,17 @@
             .input-mode-toggle {
                 flex-direction: column !important;
             }
+            /* 포트폴리오 목록: 모바일에서 1열 */
+            #portfolioList {
+                grid-template-columns: 1fr !important;
+            }
+        }
+
+        /* 포트폴리오 목록: 좁은 태블릿/폴드 펼침(481~700px)에서는 2열 유지 */
+        @media (min-width: 481px) and (max-width: 700px) {
+            #portfolioList {
+                grid-template-columns: repeat(2, 1fr) !important;
+            }
         }
 
         /* -------------------------------------------------------------
@@ -1968,7 +1979,7 @@
             <h2 style="color: #4a5568;">📂 내 포트폴리오 목록</h2>
         </div>
         <div id="portfolioList"
-            style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px;">
+            style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px;">
             <p style="text-align:center; color:#666; grid-column: 1 / -1;">포트폴리오 목록을 불러오는 중...</p>
         </div>
     </div>
@@ -2023,8 +2034,9 @@
         }
 
         function deleteLocalPortfolio(id) {
+            const numId = Number(id);
             let portfolios = getLocalPortfolios();
-            portfolios = portfolios.filter(p => p.id !== id);
+            portfolios = portfolios.filter(p => Number(p.id) !== numId);
             localStorage.setItem(DB_KEY, JSON.stringify(portfolios));
         }
 
@@ -2074,13 +2086,14 @@
                             </div>
 
                             <div style="display: flex; gap: 8px; justify-content: flex-end; align-items: center; margin-top: 10px; border-top: 1px solid #edf2f7; padding-top: 15px;">
-                                <button onclick='deletePortfolio(${p.id})' class="btn" style="background: transparent; color: #e53e3e; padding: 8px 12px; font-size: 14px; height: 38px; border-radius: 6px; border: 1px solid #feb2b2; cursor: pointer; font-size: 0.85rem; font-weight: 600; white-space: nowrap; transition: all 0.2s;">
+                                <button onclick='deletePortfolio(${p.id})' style="background: transparent; color: #e53e3e; padding: 8px 12px; height: 38px; border-radius: 6px; border: 1px solid #feb2b2; cursor: pointer; font-size: 0.85rem; font-weight: 600; white-space: nowrap; transition: all 0.2s;">
                                     삭제
                                 </button>
-                                <button onclick='loadPortfolioData(${pStr})' class="btn" style="background: #3182ce; color: white; padding: 6px 16px; border-radius: 6px; border: none; cursor: pointer; font-size: 0.85rem; font-weight: 600; white-space: nowrap; box-shadow: 0 2px 4px rgba(49, 130, 206, 0.2); transition: all 0.2s;">
+                                <button onclick='loadPortfolioData(${pStr})' style="background: #3182ce; color: white; padding: 6px 16px; height: 38px; border-radius: 6px; border: none; cursor: pointer; font-size: 0.85rem; font-weight: 600; white-space: nowrap; box-shadow: 0 2px 4px rgba(49, 130, 206, 0.2); transition: all 0.2s;">
                                     📥 불러오기
                                 </button>
                             </div>
+                        </div>
                     `;
                     }).join('');
                 } else {

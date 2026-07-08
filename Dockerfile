@@ -21,6 +21,9 @@ RUN apt-get update && apt-get install -y \
 # Copy requirements first for layer caching
 COPY requirements.txt .
 
+# Upgrade pip to suppress the upgrade warning during build
+RUN pip install --upgrade pip
+
 # Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
